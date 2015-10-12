@@ -7,9 +7,16 @@ public class Concept {
 	private String sctid;
 	private String name;
 	private String preferedName;
+	private String phrase;
 	private List<String> semtypes;	
 
-	public Concept() {
+	public Concept(String cui, String sctid, String name, String preferedName, String phrase, List<String> semtypes) {
+		this.cui = cui;
+		this.sctid = sctid;
+		this.name = name;
+		this.preferedName = preferedName;
+		this.phrase = phrase;
+		this.semtypes = semtypes;
 	}
 
 	public String getCui() {
