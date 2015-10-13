@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import nlp.NLPTagger;
+import nlp.NLPTokenizer;
+
 public final class TextProcessor {
 
 	private static final List<String> stopWords = new ArrayList<String>(Arrays.asList("and","by","for","in","of","or","the","to","with","no"));
@@ -48,4 +51,16 @@ public final class TextProcessor {
 		}
 		return refinedText;
 	}
+	
+	public static List<String> getPOSTagsAsList(String np){
+    	NLPTokenizer tokenizer = new NLPTokenizer("en-token.bin");
+    	NLPTagger tagger = new NLPTagger("en-pos-maxent.bin");
+		return tagger.posTag(tokenizer.tokenize(np));
+    }
+    
+    public static String[] getPOSTagsAsArray(String np){
+    	NLPTokenizer tokenizer = new NLPTokenizer("en-token.bin");
+    	NLPTagger tagger = new NLPTagger("en-pos-maxent.bin");
+    	return tagger.posTag(tokenizer.tokenizeArray(np));
+    }
 }

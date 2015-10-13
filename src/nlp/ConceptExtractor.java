@@ -19,12 +19,18 @@ import model.Concept;
 import model.EligibilityCriteria;
 
 public class ConceptExtractor {
+	// JDBC driver name and database URL
+	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+	static final String DB_URL = "jdbc:mysql://localhost/snomedct";
+	//  Database credentials
+	static final String USER = "root";
+	static final String PASS = "root";
 	private MetaMapApi mmapi;
 	private String options;
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-R SNOMEDCT_US";
+		this.options = "-yi -Q 2 -R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
@@ -232,7 +238,7 @@ public class ConceptExtractor {
 	}
 
 	private String getSCTId(String id){
-		DBConnector db = new DBConnector();
+		DBConnector db = new DBConnector(DB_URL, USER, PASS);
 		return null;
 	}
 }
