@@ -7,7 +7,7 @@ import java.util.List;
 import nlp.NLPTagger;
 import nlp.NLPTokenizer;
 
-public final class TextProcessor {
+final class TextProcessor {
 
 	private static final List<String> stopWords = new ArrayList<String>(Arrays.asList("and","by","for","in","of","or","the","to","with","no"));
 	private static final List<String> exclusionWords = new ArrayList<String>(Arrays.asList("about","alongside","an","anything","around","as","at",
@@ -16,17 +16,17 @@ public final class TextProcessor {
 			"properly","side","sided","some","something","specific","than","that","things","this",
 			"throughout","up","using","usually","when","while"));
 
-	public TextProcessor() {
+	TextProcessor() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public static String ProcessEligibilityCriteria(String text){
+	static String ProcessEligibilityCriteria(String text){
 		String refinedText;
 		// Elimina los guiones de puntos de contenido
 		refinedText = text.replaceAll("-\\s+(?=[A-Z])", "");
 		// Elimina los puntos de contenido numericos
 		refinedText = refinedText.replaceAll("([0-9]+\\.)+\\s", "");
-		// A las oraciones sin punto final y con salto de linea se le añade un punto final
+		// A las oraciones sin punto final y con salto de linea se le anade un punto final
 		refinedText = refinedText.replaceAll("(?<=.)\n\\s+(?=[A-Z]{1}[a-z])", ". ");
 		refinedText = refinedText.replaceAll("\\.{2}", ". ");
 		//refinedText = refinedText.replaceAll("-", " ");
@@ -36,7 +36,7 @@ public final class TextProcessor {
 		return refinedText;
 	}
 
-	public static String removeSW(String text){
+	static String removeSW(String text){
 		String refinedText = text;
 		for(String sw: stopWords){
 			refinedText = refinedText.replaceAll("\\s"+sw+"\\s", " ");
@@ -44,7 +44,7 @@ public final class TextProcessor {
 		return refinedText;
 	}
 
-	public static String removeEW(String text){
+	static String removeEW(String text){
 		String refinedText = text;
 		for(String ew: exclusionWords){
 			refinedText = refinedText.replaceAll("\\s"+ew+"\\s", " ");
@@ -52,15 +52,20 @@ public final class TextProcessor {
 		return refinedText;
 	}
 	
-	public static List<String> getPOSTagsAsList(String np){
-    	NLPTokenizer tokenizer = new NLPTokenizer("en-token.bin");
-    	NLPTagger tagger = new NLPTagger("en-pos-maxent.bin");
+	static String processNounPhrase(String phrase){
+		String refinedText = phrase;
+		return refinedText;
+	}
+	
+	static List<String> getPOSTagsAsList(String np){
+    	NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
+    	NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
 		return tagger.posTag(tokenizer.tokenize(np));
     }
     
-    public static String[] getPOSTagsAsArray(String np){
-    	NLPTokenizer tokenizer = new NLPTokenizer("en-token.bin");
-    	NLPTagger tagger = new NLPTagger("en-pos-maxent.bin");
+    static String[] getPOSTagsAsArray(String np){
+    	NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
+    	NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
     	return tagger.posTag(tokenizer.tokenizeArray(np));
     }
 }
