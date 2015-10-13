@@ -1,5 +1,7 @@
 package nlp;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,11 +34,6 @@ public class ConceptExtractor {
 		this.mmapi = new MetaMapApiImpl();
 		this.options = "-yi -Q 2 -R SNOMEDCT_US";
 		mmapi.setOptions(options);
-	}
-	
-	public List<Result> queryFromString(String text) {
-		List<Result> resultList = mmapi.processCitationsFromString(text);
-		return resultList;
 	}
 	
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
@@ -82,8 +79,7 @@ public class ConceptExtractor {
 			e1.printStackTrace();
 		}
 	}
-	
-	
+
 	public void printNegations(Result result) {
 		List<Negation> negList;
 		try {
@@ -168,6 +164,11 @@ public class ConceptExtractor {
 		}
 	}
 	
+	private List<Result> queryFromString(String text) {
+		List<Result> resultList = mmapi.processCitationsFromString(text);
+		return resultList;
+	}
+
 	/* Use MetaMap parser to get utterances and noun phrases */
 	private List<String> getUtterancesFromText(String text){
 		// do needed process
@@ -211,6 +212,7 @@ public class ConceptExtractor {
 			List<String> np = getNounPhrasesFromText(text);
 			for(String nounp: np){
 				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
+				TextProcessor.removeSW(nounp);
 				List<Result> result = queryFromString(nounp);
 				for(Result res: result){
 					for(Utterance uttr: res.getUtteranceList()){
@@ -219,7 +221,7 @@ public class ConceptExtractor {
 								for (Ev mapEv: map.getEvList()) {
 									Concept concept = new Concept(mapEv.getConceptId(),
 											mapEv.getConceptName(),
-											getSCTId(mapEv.getConceptId()),
+											"-"/*getSCTId(mapEv.getConceptId())*/,
 											mapEv.getPreferredName(),
 											pcm.getPhrase().getPhraseText(),
 											mapEv.getSemanticTypes());
@@ -239,6 +241,18 @@ public class ConceptExtractor {
 
 	private String getSCTId(String id){
 		DBConnector db = new DBConnector(DB_URL, USER, PASS);
-		return null;
+		String sql = "SELECT conceptid FROM table WHERE cui=\""+id+"\"";
+		String sctid = "-";
+		try {
+			ResultSet rs = db.performQuery(sql);
+			while(rs.next()){
+				sctid = rs.getString("conceptid");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		db.endConnector();
+		return sctid;
 	}
 }

@@ -69,5 +69,11 @@ public class DBConnector {
 			}//end finally try
 		}//end try
 	}
-
+	
+	public void showCredentials(){
+		System.out.println("DBConnector instance credentials:");
+		System.out.println("Database:"+db);
+		System.out.println("User:"+user);
+		System.out.println("Password:"+pass);
+	}
 }
