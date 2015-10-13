@@ -220,8 +220,8 @@ public class ConceptExtractor {
 							for (Mapping map: pcm.getMappingList()) {
 								for (Ev mapEv: map.getEvList()) {
 									Concept concept = new Concept(mapEv.getConceptId(),
-											mapEv.getConceptName(),
 											"-"/*getSCTId(mapEv.getConceptId())*/,
+											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
 											pcm.getPhrase().getPhraseText(),
 											mapEv.getSemanticTypes());
