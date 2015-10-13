@@ -15,7 +15,7 @@ public class App {
 		// NCT01633060
 		// NCT01700257
 		CTManager ctm = new CTManager();
-		String nctid = "NCT01358877";
+		String nctid = "NCT00148876";
 		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 		ct.print();
 		String criteria = ct.getCriteria();

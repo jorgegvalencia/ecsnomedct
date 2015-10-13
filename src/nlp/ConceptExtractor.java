@@ -32,7 +32,7 @@ public class ConceptExtractor {
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-yi -Q 2 -R SNOMEDCT_US";
+		this.options = "-i -Q 2 -R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
@@ -212,8 +212,7 @@ public class ConceptExtractor {
 			List<String> np = getNounPhrasesFromText(text);
 			for(String nounp: np){
 				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
-				TextProcessor.removeSW(nounp);
-				List<Result> result = queryFromString(nounp);
+				List<Result> result = queryFromString(TextProcessor.removeSW(nounp).toLowerCase());
 				for(Result res: result){
 					for(Utterance uttr: res.getUtteranceList()){
 						for (PCM pcm: uttr.getPCMList()) {
@@ -223,7 +222,7 @@ public class ConceptExtractor {
 											"-"/*getSCTId(mapEv.getConceptId())*/,
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
-											pcm.getPhrase().getPhraseText(),
+											nounp/*pcm.getPhrase().getPhraseText()*/,
 											mapEv.getSemanticTypes());
 									concepts.add(concept);
 								}

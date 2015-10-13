@@ -39,8 +39,8 @@ public class EligibilityCriteria {
 		}
 		for(Concept concept: concepts){
 			//System.out.println("Noun Phrase: "+phrase);
-			System.out.format("%s|%40s|\t%s\n",
-					concept.getCui(),concept.getName(),"Phrase: "+concept.getPhrase());
+			System.out.format("%s|%30s|%40s\t%s\n",
+					concept.getCui(),concept.getPreferedName(),"["+concept.SemTypesString()+"]","Phrase: "+concept.getPhrase());
 		}
 		System.out.println("\n");
 	}
