@@ -1,1 +1,5 @@
 /bin/
+/resources/
+.classpath
+.project
+frecuencies.csv

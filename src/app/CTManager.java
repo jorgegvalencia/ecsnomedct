@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -76,9 +78,9 @@ public class CTManager {
 	public ClinicalTrial buildClinicalTrial(String nctid){
 		ClinicalTrial ct = new ClinicalTrial();
 		String filePath = "resources/"+nctid+".xml";
-		System.out.println("Checking local files...");
+		//System.out.println("Checking local files...");
 		if(!checkLocalFile(nctid)){
-			System.out.println("Sending request to clinicaltrials.gov...");
+			//System.out.println("Sending request to clinicaltrials.gov...");
 			downloadClinicalTrial(nctid);
 		}
 		try{
@@ -103,7 +105,7 @@ public class CTManager {
 					case "brief_title":
 						ct.setTitle(streamReader.getElementText());
 						break;
-/*					case "overall_status":
+						/*					case "overall_status":
 						ct.setOverall_status(overall_status);
 						break;*/
 					case "start_date":
@@ -153,5 +155,32 @@ public class CTManager {
 			e.printStackTrace();
 		}
 		return ct;
+	}
+
+	public List<ClinicalTrial> buildTrialsSet(){
+		String path="resources/";
+		List<ClinicalTrial> list = new ArrayList<ClinicalTrial>();
+		File[] files = new File(path).listFiles();
+		for(File f: files){
+			if(f.getName().contains("NCT")){
+				ClinicalTrial ct = buildClinicalTrial(f.getName().replace(".xml", ""));
+				list.add(ct);
+			}
+		}
+		return list;
+	}
+
+	public void showTrialsFiles(){
+		String path="resources/";
+		File[] files = new File(path).listFiles();
+		for (File file : files) {
+			if(file.getName().contains("NCT")){
+				if (file.isDirectory()) {
+					System.out.println("Directory: " + file.getName());
+				} else {
+					System.out.println("File: " + file.getName());
+				}
+			}
+		}
 	}
 }

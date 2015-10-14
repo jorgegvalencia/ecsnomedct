@@ -32,7 +32,7 @@ public class ConceptExtractor {
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-i -Q 2 -R SNOMEDCT_US";
+		this.options = "-R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
