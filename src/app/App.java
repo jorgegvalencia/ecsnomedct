@@ -115,7 +115,7 @@ public class App {
 		List<Concept> conceptList = new ArrayList<Concept>();
 		String path="resources/trials/";
 		File[] files = new File(path).listFiles();
-		int j=0;
+		int j=1;
 		for(File f: files){
 			if(f.getName().contains("NCT")){
 				long startTime = System.nanoTime();
@@ -165,12 +165,12 @@ public class App {
 			}
 		});
 		
-		System.out.println("Total trials: "+files.length);
+		System.out.println("Total trials: "+j);
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
-		System.out.println("Top 10:");
+		System.out.println("Top 50:");
 		System.out.format("%30s | %15s | %5s \n","Concept","Appearances","Frecuency");
-		for(int i = 0; i < 10; i++){
+		for(int i = 0; i < 50 && i < entries.size(); i++){
 			double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/(double)nConcepts);
 			System.out.format("%-30s | %-15s | %-5.4f %%\n",
 					entries.get(entries.size() - i - 1).getKey(),
@@ -179,10 +179,10 @@ public class App {
 		}
 		
 		System.out.println("Total distinct patterns:"+entries2.size());
-		System.out.format("%12s | %-15s | %-30s\n","Frecuency","Appearances","Pattern");
+		System.out.format("%30s | %-15s | %-30s\n","Frecuency","Appearances","Pattern");
 		for(int i = 0; i < 50 && i<entries2.size(); i++){
 			double frecuency = ((double)entries2.get(entries2.size() - i - 1).getValue()/(double)nPatterns);
-			System.out.format("%-8.4f%% | %-15s | %-30s\n",
+			System.out.format("%28.4f%% | %-15s | %-30s\n",
 					frecuency*100,
 					entries2.get(entries2.size() - i - 1).getValue(),
 					entries2.get(entries2.size() - i - 1).getKey());
