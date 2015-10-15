@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import nlp.NLPTagger;
 import nlp.NLPTokenizer;
 
@@ -19,6 +20,7 @@ final class TextProcessor {
 			"are","that",",",";","<","who","of","since","and/or","as","would","if","for",").",
 			"will","may","e.g.","has","with","OR","been","but","had","either","unless","should",
 			"Must","in","of the","any","than","by","which","If","Have","they","to","can","Has"));
+	private static MaxentTagger tagger = new MaxentTagger("taggers/english-left3words-distsim.tagger");
 
 	TextProcessor() {
 		// TODO Auto-generated constructor stub
@@ -79,5 +81,20 @@ final class TextProcessor {
     	NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
     	NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
     	return tagger.posTag(tokenizer.tokenizeArray(np));
+    }
+    
+    static String getPOSTagsAsString(String np){
+    	String tagged = tagger.tagString(np);
+    	tagged = tagged.replace("_", "/");
+    	return tagged;
+    }
+    
+/*    static String getParse(String np){
+    	NLPParser parser = new NLPParser("resources/en-parser-chunking.bin");
+    }*/
+    
+    static List<String> getSentencesFromText(String text){
+    	NLPSentenceDetector sd = new NLPSentenceDetector("resources/en-sent.bin");
+    	return sd.detectSentences(text);
     }
 }

@@ -158,7 +158,8 @@ public class CTManager {
 	}
 
 	public List<ClinicalTrial> buildTrialsSet(){
-		String path="resources/";
+		System.out.print("Building trials set...\r");
+		String path="resources/trials/";
 		List<ClinicalTrial> list = new ArrayList<ClinicalTrial>();
 		File[] files = new File(path).listFiles();
 		for(File f: files){
@@ -167,11 +168,12 @@ public class CTManager {
 				list.add(ct);
 			}
 		}
+		System.out.print("Building trials set... done\n");
 		return list;
 	}
 
 	public void showTrialsFiles(){
-		String path="resources/";
+		String path="resources/trials/";
 		File[] files = new File(path).listFiles();
 		for (File file : files) {
 			if(file.getName().contains("NCT")){

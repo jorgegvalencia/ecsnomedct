@@ -29,6 +29,7 @@ public class ConceptExtractor {
 	static final String PASS = "root";
 	private MetaMapApi mmapi;
 	private String options;
+	private static int n = 0;
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
@@ -37,6 +38,7 @@ public class ConceptExtractor {
 	}
 	
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
+		n++;
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
 		int type = 0;
 		// Process raw criteria
@@ -53,6 +55,31 @@ public class ConceptExtractor {
 			}
 			// get the concepts from the utterance
 			List<Concept> concepts = getConceptsFromText(utt);
+			// create EligibilityCriteria object
+			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+			ecList.add(ec);
+		}
+		return ecList;
+	}
+	
+	public List<EligibilityCriteria> getEligibilityCriteriaFromTextBeta(String text){
+		n++;
+		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
+		int type = 0;
+		// Process raw criteria
+		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
+		// Get the utterances for each EC
+		List<String> uttList = getUtterancesFromText(criteria);
+		// for each utterance
+		for(String utt: uttList){
+			if(utt.contains("Inclusion") || utt.contains("inclusion")){
+				type = 1;
+			}
+			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
+				type = 2;
+			}
+			// get the concepts from the utterance
+			List<Concept> concepts = getConceptsFromTextBeta(utt);
 			// create EligibilityCriteria object
 			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
 			ecList.add(ec);
@@ -172,8 +199,8 @@ public class ConceptExtractor {
 	/* Use MetaMap parser to get utterances and noun phrases */
 	private List<String> getUtterancesFromText(String text){
 		// do needed process
-		List<String> utterances = new ArrayList<String>();
-		try{
+		List<String> utterances = TextProcessor.getSentencesFromText(text);
+		/*try{
 			List<Result> result = queryFromString(text);
 			for(Result res: result){
 				for(Utterance uttr: res.getUtteranceList()){
@@ -183,7 +210,7 @@ public class ConceptExtractor {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 		return utterances;
 	}
 	
@@ -222,7 +249,7 @@ public class ConceptExtractor {
 											"-"/*getSCTId(mapEv.getConceptId())*/,
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
-											nounp/*pcm.getPhrase().getPhraseText()*/,
+											nounp /*pcm.getPhrase().getPhraseText()*/,
 											mapEv.getSemanticTypes());
 									concepts.add(concept);
 								}
@@ -231,6 +258,36 @@ public class ConceptExtractor {
 					}
 				}
 			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return concepts;
+	}
+	
+	private List<Concept> getConceptsFromTextBeta(String text){
+		List<Concept> concepts = new ArrayList<Concept>();
+		try{
+				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
+				List<Result> result = queryFromString(text);
+				for(Result res: result){
+					for(Utterance uttr: res.getUtteranceList()){
+						for (PCM pcm: uttr.getPCMList()) {
+							for (Mapping map: pcm.getMappingList()) {
+								for (Ev mapEv: map.getEvList()) {
+									Concept concept = new Concept(mapEv.getConceptId(),
+											"-"/*getSCTId(mapEv.getConceptId())*/,
+											mapEv.getConceptName(),
+											mapEv.getPreferredName(),
+											TextProcessor.getPOSTagsAsString(pcm.getPhrase().getPhraseText()).replaceAll("(\\w|-|\\,|\\.|\\d)*/(?=.)", "")/*pcm.getPhrase().getPhraseText()*/,
+											mapEv.getSemanticTypes());
+									concepts.add(concept);
+								}
+							}
+						}
+					}
+				}
+
 		}
 		catch (Exception e) {
 			e.printStackTrace();
