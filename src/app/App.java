@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import nlp.ConceptExtractor;
+import nlp.TextProcessor;
 import model.ClinicalTrial;
 import model.Concept;
 import model.EligibilityCriteria;
@@ -25,18 +26,19 @@ public class App {
 		// NCT01700257
 		long startTime = System.nanoTime();
 
-		/*CTManager ctm = new CTManager();
+		CTManager ctm = new CTManager();
 		String nctid = "NCT02102490";
 		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 		//ct.print();
 		String criteria = ct.getCriteria();
-		ConceptExtractor ce = new ConceptExtractor();
+		//ConceptExtractor ce = new ConceptExtractor();
 		//ctm.showTrialsFiles();
-		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+		/*List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 		for(EligibilityCriteria ec: ecList){
 			ec.print();
 		}*/
-		clusterConceptsBeta();
+		//clusterConceptsBeta();
+		TextProcessor.getSentences(criteria);
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}

@@ -33,7 +33,7 @@ public class ConceptExtractor {
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-R SNOMEDCT_US";
+		this.options = "-Q 4 -R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
@@ -279,7 +279,7 @@ public class ConceptExtractor {
 											"-"/*getSCTId(mapEv.getConceptId())*/,
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
-											TextProcessor.getPOSTagsAsString(pcm.getPhrase().getPhraseText()).replaceAll("(\\w|-|\\,|\\.|\\d)*/(?=.)", "")/*pcm.getPhrase().getPhraseText()*/,
+											TextProcessor.getPOSTagsAsString(pcm.getPhrase().getPhraseText()).replaceAll("(\\w|-|\\,|\\.|\\d|\\^)*/(?=.)", "")/*pcm.getPhrase().getPhraseText()*/,
 											mapEv.getSemanticTypes());
 									concepts.add(concept);
 								}
