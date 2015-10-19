@@ -43,7 +43,7 @@ public class Concept {
 		return semtypes;
 	}
 
-	public String SemTypesString(){
+	public String semTypesString(){
 		String r = "";
 		for(String s: semtypes){
 			if(semtypes.size()>0 && semtypes.get(semtypes.size()-1).equals(s))

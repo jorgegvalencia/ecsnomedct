@@ -115,15 +115,24 @@ public final class TextProcessor {
 		}
 	}
 
-	public static void getDependencies(String text){
+	public static List<String> getDependencies(String text){
+		List<String> list = new ArrayList<>();
 		DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(text));
 		for (List<HasWord> sentence : tokenizer) {
 			List<TaggedWord> tagged = tagger.tagSentence(sentence);
 			GrammaticalStructure gs = parser.predict(tagged);
-			for(TypedDependency dependency: gs.typedDependencies()){
-				System.out.println(dependency);
+			for(TypedDependency dependency: gs.typedDependenciesCCprocessed()){
+				//filter
+				if(!dependency.toString().contains("punct")){
+					list.add(dependency.toString());
+					//list.add(dependency.toString().replaceAll("\\(.*\\)", ""));
+				}
 			}
 		}
+		for(String l: list){
+			System.out.println(l);
+		}
+		return list;
 		/*Properties props = new Properties();
 		
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,14 +32,17 @@ public class App {
 		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 		//ct.print();
 		String criteria = ct.getCriteria();
-		//ConceptExtractor ce = new ConceptExtractor();
+		ConceptExtractor ce = new ConceptExtractor();
 		//ctm.showTrialsFiles();
-		/*List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 		for(EligibilityCriteria ec: ecList){
 			ec.print();
-		}*/
+		}
+		//clusterConcepts();
 		//clusterConceptsBeta();
-		TextProcessor.getSentences(criteria);
+		//clusterDependencies();
+		/*TextProcessor.getSentences("Human Epidermal Growth Factor Receptor 2 Negative");
+		TextProcessor.getSentences("human epidermal growth factor receptor 2 negative");*/
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
@@ -46,30 +50,33 @@ public class App {
 	public static void clusterConcepts(){
 		CTManager ctm = new CTManager();
 		Map<String,Integer> map = new HashMap<String,Integer>();
-		List<ClinicalTrial> trials = ctm.buildTrialsSet();
 		int nConcepts = 0;
 		List<Concept> conceptList = new ArrayList<Concept>();
-		for(ClinicalTrial ct: trials){
-			String criteria = ct.getCriteria();
-			ConceptExtractor ce = new ConceptExtractor();
-			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
-			for(EligibilityCriteria ec: ecList){
-				conceptList.addAll(ec.getConcepts());
-				/*for(Concept concept: ec.getConcepts()){
-					if(map.containsKey(concept.getName()))
-						map.put(concept.getName(), map.get(concept.getName())+1);
-					else
-						map.put(concept.getName(), 0);
-					nConcepts++;
-				}*/
+		String path="resources/trials/";
+		File[] files = new File(path).listFiles();
+		int j=1;
+		for(File f: files){
+			if(f.getName().contains("NCT")){
+				long startTime = System.nanoTime();
+				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
+				ConceptExtractor ce = new ConceptExtractor();
+				String criteria = ct.getCriteria();
+				List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromTextBeta(criteria);
+				for(EligibilityCriteria ec: ecList){
+					conceptList.addAll(ec.getConcepts());
+				}
+				long endTime = System.nanoTime();
+				System.out.print("["+j+"] ");
+				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
+				j++;
 			}
 		}
 		System.out.println("Building map...");
 		for(Concept concept: conceptList){
 			if(map.containsKey(concept.getName()))
-				map.put(concept.getName(), map.get(concept.getName())+1);
+				map.put(concept.semTypesString(), map.get(concept.semTypesString())+1);
 			else
-				map.put(concept.getName(), 1);
+				map.put(concept.semTypesString(), 1);
 			nConcepts++;
 		}
 		System.out.println("Sorting map...");
@@ -80,11 +87,12 @@ public class App {
 				return a.getValue().compareTo(b.getValue());
 			}
 		});
-		System.out.println("Total trials: "+trials.size());
+		
+		System.out.println("Total trials: "+j);
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
 		System.out.println("Top 50:");
-		System.out.format("%30s | %15s | %5s \n","Concept","Appearances","Frecuency");
+		System.out.format("%30s | %15s | %5s \n","SemType","Appearances","Frecuency");
 		for(int i = 0; i < 50 && i < entries.size(); i++){
 			double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/(double)nConcepts);
 			System.out.format("%-30s | %-15s | %-5.4f %%\n",
@@ -94,7 +102,7 @@ public class App {
 		}
 		try{
 			FileWriter writer = new FileWriter("frecuencies.csv");
-			writer.append("Concept ; Appearances ; Frecuency \n");
+			writer.append("SemType ; Appearances ; Frecuency \n");
 			for(int i = 0; i < entries.size(); i++){
 				double frecuency = ((double)entries.get(i).getValue()/nConcepts);
 				writer.append(String.format("%s ; %s ; %.4f\n",entries.get(i).getKey(),entries.get(i).getValue().toString(),frecuency));
@@ -203,6 +211,56 @@ public class App {
 		catch(IOException e)
 		{
 			e.printStackTrace();
+		}
+	}
+	
+	public static void clusterDependencies(){
+		CTManager ctm = new CTManager();
+		Map<String,Integer> patternmap = new HashMap<String,Integer>();
+		int nPatterns = 0;
+		String path="resources/trials/";
+		File[] files = new File(path).listFiles();
+		List<File> flist = Arrays.asList(files);
+		int j=1;
+		for(File f: flist){
+			if(f.getName().contains("NCT")){
+				long startTime = System.nanoTime();
+				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
+				ConceptExtractor ce = new ConceptExtractor();
+				String criteria = ct.getCriteria();
+				List<String> utterances = ce.getUtterancesFromText(criteria);
+				for(String utt: utterances){
+					for(String dependency: TextProcessor.getDependencies(utt)){
+						if(patternmap.containsKey(dependency))
+							patternmap.put(dependency, patternmap.get(dependency)+1);
+						else
+							patternmap.put(dependency, 1);
+						nPatterns++;
+					}
+				}
+				long endTime = System.nanoTime();
+				System.out.print("["+j+"] ");
+				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
+				j++;
+			}
+		}
+		System.out.println("Sorting map...");
+		ArrayList<Map.Entry<String, Integer>> entries2 = new ArrayList<>(patternmap.entrySet());
+		Collections.sort(entries2, new Comparator<Map.Entry<String, Integer>>() {
+			@Override
+			public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
+				return a.getValue().compareTo(b.getValue());
+			}
+		});
+		System.out.println("Total trials: "+j);
+		System.out.println("Top 50:");
+		System.out.format("%30s | %15s | %5s \n","Dependency","Appearances","Frecuency");
+		for(int i = 0; i < 50 && i < entries2.size(); i++){
+			double frecuency = ((double)entries2.get(entries2.size() - i - 1).getValue()/(double)nPatterns);
+			System.out.format("%-30s | %-15s | %-5.4f %%\n",
+					entries2.get(entries2.size() - i - 1).getKey(),
+					+entries2.get(entries2.size() - i - 1).getValue(),
+					frecuency*100);
 		}
 	}
 }

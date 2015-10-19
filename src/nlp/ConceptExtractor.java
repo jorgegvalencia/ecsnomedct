@@ -33,10 +33,28 @@ public class ConceptExtractor {
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-Q 4 -R SNOMEDCT_US";
+		this.options = "-Q 2 -R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
+	/* Use MetaMap parser to get utterances and noun phrases */
+	public List<String> getUtterancesFromText(String text){
+		// do needed process
+		List<String> utterances = TextProcessor.getSentencesFromText(text);
+		/*try{
+			List<Result> result = queryFromString(text);
+			for(Result res: result){
+				for(Utterance uttr: res.getUtteranceList()){
+					utterances.add(uttr.getString());
+				}
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}*/
+		return utterances;
+	}
+
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
 		n++;
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
@@ -196,24 +214,6 @@ public class ConceptExtractor {
 		return resultList;
 	}
 
-	/* Use MetaMap parser to get utterances and noun phrases */
-	private List<String> getUtterancesFromText(String text){
-		// do needed process
-		List<String> utterances = TextProcessor.getSentencesFromText(text);
-		/*try{
-			List<Result> result = queryFromString(text);
-			for(Result res: result){
-				for(Utterance uttr: res.getUtteranceList()){
-					utterances.add(uttr.getString());
-				}
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}*/
-		return utterances;
-	}
-	
 	private List<String> getNounPhrasesFromText(String text){
 		List<String> np = new ArrayList<String>();
 		try{
@@ -242,9 +242,11 @@ public class ConceptExtractor {
 				List<Result> result = queryFromString(TextProcessor.removeSW(nounp).toLowerCase());
 				for(Result res: result){
 					for(Utterance uttr: res.getUtteranceList()){
-						for (PCM pcm: uttr.getPCMList()) {
-							for (Mapping map: pcm.getMappingList()) {
-								for (Ev mapEv: map.getEvList()) {
+						for (PCM pcm: uttr.getPCMList()){
+							if(!pcm.getMappingList().isEmpty()){
+								// only best mapping
+								Mapping map = pcm.getMappingList().get(0);
+								for (Ev mapEv: map.getEvList()){
 									Concept concept = new Concept(mapEv.getConceptId(),
 											"-"/*getSCTId(mapEv.getConceptId())*/,
 											mapEv.getConceptName(),
@@ -253,7 +255,7 @@ public class ConceptExtractor {
 											mapEv.getSemanticTypes());
 									concepts.add(concept);
 								}
-							}
+							}	
 						}
 					}
 				}
