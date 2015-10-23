@@ -33,7 +33,7 @@ public class ConceptExtractor {
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
-		this.options = "-Q 2 -R SNOMEDCT_US";
+		this.options = "-Q 2 -k cell,fish,ftcn,idcn,inpr,menp,mnob,podg,qlco,qnco,spco,tmco -R SNOMEDCT_US";
 		mmapi.setOptions(options);
 	}
 	
@@ -103,6 +103,12 @@ public class ConceptExtractor {
 			ecList.add(ec);
 		}
 		return ecList;
+	}
+	
+	public List<EligibilityCriteria> filterConcepts(List<EligibilityCriteria> list){
+		List<EligibilityCriteria> filteredList = new ArrayList<>();
+		return list;
+		
 	}
 	
 	public void printAcronymsAbbrevs(Result result) {
@@ -296,6 +302,8 @@ public class ConceptExtractor {
 		}
 		return concepts;
 	}
+
+	
 
 	private String getSCTId(String id){
 		DBConnector db = new DBConnector(DB_URL, USER, PASS);

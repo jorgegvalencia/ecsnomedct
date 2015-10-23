@@ -3,18 +3,25 @@ package nlp;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.ling.TaggedWord;
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.parser.nndep.DependencyParser;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.GrammaticalStructureFactory;
+import edu.stanford.nlp.trees.PennTreebankLanguagePack;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 
@@ -45,6 +52,7 @@ public final class TextProcessor {
 		refinedText = refinedText.replaceAll("\\.{2}", ". ");
 		//refinedText = refinedText.replaceAll("-", " ");
 		refinedText = refinedText.replaceAll("\\s+", " ");
+		refinedText = refinedText.replaceAll("\\\"", "");
 		//refinedText = refinedText.replaceAll("(?<=\\p{Punct})\n\\s+(?=[A-Z])", "\n");
 		//refinedText = refinedText.replaceAll(" [a-z]. ","");
 		return refinedText;
@@ -96,6 +104,13 @@ public final class TextProcessor {
 		tagged = tagged.replace("_", "/");
 		return tagged;
 	}
+	
+	public static List<String> getChunksAsList(String sentence){
+		NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
+		NLPChunker chunker = new NLPChunker("resources/en-chunker.bin");
+		NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
+		return chunker.chunk(tokenizer.tokenize(sentence),tagger.posTag(tokenizer.tokenize(sentence)));
+	}
 
 	public static List<String> getSentencesFromText(String text){
 		NLPSentenceDetector sd = new NLPSentenceDetector("resources/en-sent.bin");
@@ -104,7 +119,7 @@ public final class TextProcessor {
 	
 	public static void getSentences(String text){
 		Properties props = new Properties();
-		props.setProperty("annotators", "tokenize, ssplit");
+		props.setProperty("annotators", "tokenize, ssplit, parse, pos");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 		Annotation annotation = new Annotation(text);
 		pipeline.annotate(annotation);
@@ -123,15 +138,16 @@ public final class TextProcessor {
 			GrammaticalStructure gs = parser.predict(tagged);
 			for(TypedDependency dependency: gs.typedDependenciesCCprocessed()){
 				//filter
-				if(!dependency.toString().contains("punct")){
-					list.add(dependency.toString());
-					//list.add(dependency.toString().replaceAll("\\(.*\\)", ""));
+				if(!dependency.toString().contains("punct") &&
+						!dependency.toString().contains("case")){
+					//list.add(dependency.toString());
+					list.add(dependency.toString().replaceAll("\\(.*\\)", ""));
 				}
 			}
 		}
-		for(String l: list){
+		/*for(String l: list){
 			System.out.println(l);
-		}
+		}*/
 		return list;
 		/*Properties props = new Properties();
 		
@@ -144,17 +160,21 @@ public final class TextProcessor {
 			graph.prettyPrint();
 		}*/
 		
-		/*LexicalizedParser lp = LexicalizedParser.loadModel(
-    			"edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz",
-    			"-maxLength", "80", "-retainTmpSubcategories");
-    	TreebankLanguagePack tlp = new PennTreebankLanguagePack();
-    	// Uncomment the following line to obtain original Stanford Dependencies
-    	// tlp.setGenerateOriginalDependencies(true);
-    	GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
-    	String[] sent = {"This", "is", "an", "easy", "sentence", "."};
-    	Tree parse = lp.apply(Sentence.toWordList(sent));
-    	GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
-    	Collection<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
-    	System.out.println(tdl);*/
+		
+	}
+	
+	public static void getDependencies2(){
+		LexicalizedParser lp = LexicalizedParser.loadModel(
+				"edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz",
+				"-maxLength", "80", "-retainTmpSubcategories");
+		TreebankLanguagePack tlp = new PennTreebankLanguagePack();
+		// Uncomment the following line to obtain original Stanford Dependencies
+		tlp.setGenerateOriginalDependencies(true);
+		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+		String[] sent = {"This", "is", "an", "easy", "sentence", "."};
+		Tree parse = lp.apply(Sentence.toWordList(sent));
+		GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
+		Collection<TypedDependency> tdl = gs.typedDependenciesCollapsedTree();
+		System.out.println(tdl);
 	}
 }
