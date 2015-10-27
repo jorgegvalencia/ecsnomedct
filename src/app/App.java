@@ -21,14 +21,23 @@ public class App {
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
-		//metamap();
+		//norm();
+		metamap();
 		//clusterConcepts();
-		clusterConceptsBeta();
+		//clusterConceptsBeta();
 		//clusterDependencies();
 		//System.out.println("Pathologically confirmed carcinoma of the breast.");
 		//System.out.println(TextProcessor.getChunksAsList("Pathologically confirmed carcinoma of the breast."));
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
+	}
+	
+	public static void norm(){
+		String sctid = "71620000";
+		CoreDatasetServiceClient normalize = new CoreDatasetServiceClient();
+		normalize.prettyPrintNormalForm(sctid);
+		String normform = normalize.getNormalFormAsString(sctid);
+		System.out.println(normform);
 	}
 	
 	public static void metamap(){
@@ -38,6 +47,7 @@ public class App {
 		// NCT01633060
 		// NCT01700257
 		CTManager ctm = new CTManager();
+		CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 		String nctid = "NCT01358877";
 		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 		//ct.print();
@@ -46,7 +56,14 @@ public class App {
 		//ctm.showTrialsFiles();
 		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 		for(EligibilityCriteria ec: ecList){
-			ec.print();
+			if(!ec.getConcepts().isEmpty()){
+				ec.print();
+				System.out.println("{");
+				for(Concept c: ec.getConcepts()){
+					System.out.println(normalizer.getNormalFormAsString(c.getSctid()));
+				}
+				System.out.println("}");
+			}
 		}
 	}
 
@@ -124,6 +141,7 @@ public class App {
 		ConceptExtractor ce = new ConceptExtractor();
 		Map<String,Integer> map = new HashMap<String,Integer>();
 		Map<String,String> semmap = new HashMap<>();
+		Map<String,Tuple<String,String>> codesmap = new HashMap<>();
 		//Map<String,Integer> patternmap = new HashMap<String,Integer>();
 		int nConcepts = 0;
 		//int nPatterns = 0;
@@ -153,6 +171,7 @@ public class App {
 			else
 				map.put(concept.getName(), 1);
 			semmap.put(concept.getName(),concept.semTypesString());
+			codesmap.put(concept.getName(), new Tuple<String,String>(concept.getCui(),concept.getSctid()));
 			nConcepts++;
 		}
 		System.out.println("Sorting map...");
@@ -184,10 +203,12 @@ public class App {
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
 		System.out.println("Top 50:");
-		System.out.format("%30s | %15s | %5s | %55s \n","Concept","Appearances","Frecuency","Semantic Type");
+		System.out.format("%15s | %15s | %30s | %15s | %5s | %55s \n","CUI","SCTID","Concept","Appearances","Frecuency","Semantic Type");
 		for(int i = 0; i < 50 && i < entries.size(); i++){
 			double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/(double)nConcepts);
-			System.out.format("%-30s | %-15s | %-5.4f %%  | %55s \n",
+			System.out.format("%15s | %15s | %-30s | %-15s | %-5.4f %%  | %55s \n",
+					codesmap.get(entries.get(entries.size() - i - 1).getKey()).item1,
+					codesmap.get(entries.get(entries.size() - i - 1).getKey()).item2,
 					entries.get(entries.size() - i - 1).getKey(),
 					+entries.get(entries.size() - i - 1).getValue(),
 					frecuency*100,
@@ -206,10 +227,16 @@ public class App {
 		
 		try{
 			FileWriter writer = new FileWriter("frecuencies.csv");
-			writer.append("Concept;Appearances;Frecuency;SemanticType\n");
+			writer.append("CUI;SCTID;Concept;Appearances;Frecuency;SemanticType\n");
 			for(int i = 0; i < entries.size(); i++){
 				double frecuency = ((double)entries.get(i).getValue()/nConcepts);
-				writer.append(String.format("%s;%s;%.4f;%s\n",entries.get(i).getKey(),entries.get(i).getValue().toString(),frecuency,semmap.get(entries.get(i).getKey())));
+				writer.append(String.format("%s;%s;%s;%s;%.4f;%s\n",
+						codesmap.get(entries.get(entries.size() - i - 1).getKey()).item1,
+						codesmap.get(entries.get(entries.size() - i - 1).getKey()).item2,
+						entries.get(i).getKey(),
+						entries.get(i).getValue().toString(),
+						frecuency,
+						semmap.get(entries.get(i).getKey())));
 			}
 			writer.flush();
 			writer.close();

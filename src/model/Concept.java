@@ -9,6 +9,7 @@ public class Concept {
 	private String preferedName;
 	private String phrase;
 	private List<String> semtypes;	
+	private String normalForm;
 
 	public Concept(String cui, String sctid, String name, String preferedName, String phrase, List<String> semtypes) {
 		this.cui = cui;
@@ -52,6 +53,14 @@ public class Concept {
 				r=r+resolveST(s)+",";
 		}
 		return r;
+	}
+	
+	public String getNormalForm() {
+		return normalForm;
+	}
+
+	public void setNormalForm(String normalForm) {
+		this.normalForm = normalForm;
 	}
 
 	private String resolveST(String st){

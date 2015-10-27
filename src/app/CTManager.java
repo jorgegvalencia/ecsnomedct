@@ -44,7 +44,7 @@ public class CTManager {
 	 */
 	private void downloadClinicalTrial(String nctid){
 		String path = "https://clinicaltrials.gov/show/"+nctid+"?displayxml=true";
-		String filePath = "resources/"+nctid+".xml";
+		String filePath = "resources/trials/"+nctid+".xml";
 		try {
 			URL url = new URL(path);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -77,7 +77,7 @@ public class CTManager {
 	 */
 	public ClinicalTrial buildClinicalTrial(String nctid){
 		ClinicalTrial ct = new ClinicalTrial();
-		String filePath = "resources/"+nctid+".xml";
+		String filePath = "resources/trials/"+nctid+".xml";
 		//System.out.println("Checking local files...");
 		if(!checkLocalFile(nctid)){
 			//System.out.println("Sending request to clinicaltrials.gov...");

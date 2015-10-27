@@ -23,13 +23,13 @@ import model.EligibilityCriteria;
 public class ConceptExtractor {
 	// JDBC driver name and database URL
 	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	static final String DB_URL = "jdbc:mysql://localhost/snomedct";
+	static final String DB_URL = "jdbc:mysql://kandel.dia.fi.upm.es/metathesaurus";
 	//  Database credentials
-	static final String USER = "root";
-	static final String PASS = "root";
+	static final String USER = "umls";
+	static final String PASS = "terminology_service";
 	private MetaMapApi mmapi;
 	private String options;
-	private static int n = 0;
+	private DBConnector db;
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
@@ -37,26 +37,14 @@ public class ConceptExtractor {
 		mmapi.setOptions(options);
 	}
 	
-	/* Use MetaMap parser to get utterances and noun phrases */
 	public List<String> getUtterancesFromText(String text){
 		// do needed process
 		List<String> utterances = TextProcessor.getSentencesFromText(text);
-		/*try{
-			List<Result> result = queryFromString(text);
-			for(Result res: result){
-				for(Utterance uttr: res.getUtteranceList()){
-					utterances.add(uttr.getString());
-				}
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}*/
 		return utterances;
 	}
 
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
-		n++;
+		db = new DBConnector(DB_URL, USER, PASS);
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
 		int type = 0;
 		// Process raw criteria
@@ -77,11 +65,12 @@ public class ConceptExtractor {
 			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
 			ecList.add(ec);
 		}
+		db.endConnector();
 		return ecList;
 	}
 	
 	public List<EligibilityCriteria> getEligibilityCriteriaFromTextBeta(String text){
-		n++;
+		db = new DBConnector(DB_URL, USER, PASS);
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
 		int type = 0;
 		// Process raw criteria
@@ -102,15 +91,15 @@ public class ConceptExtractor {
 			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
 			ecList.add(ec);
 		}
+		db.endConnector();
 		return ecList;
 	}
 	
 	public List<EligibilityCriteria> filterConcepts(List<EligibilityCriteria> list){
-		List<EligibilityCriteria> filteredList = new ArrayList<>();
-		return list;
-		
+		List<EligibilityCriteria> filteredList = new ArrayList<>(list);
+		return filteredList;
 	}
-	
+
 	public void printAcronymsAbbrevs(Result result) {
 		List<AcronymsAbbrevs> aaList;
 		try {
@@ -254,7 +243,7 @@ public class ConceptExtractor {
 								Mapping map = pcm.getMappingList().get(0);
 								for (Ev mapEv: map.getEvList()){
 									Concept concept = new Concept(mapEv.getConceptId(),
-											"-"/*getSCTId(mapEv.getConceptId())*/,
+											getSCTId(mapEv.getConceptId()),
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
 											nounp /*pcm.getPhrase().getPhraseText()*/,
@@ -284,7 +273,7 @@ public class ConceptExtractor {
 							for (Mapping map: pcm.getMappingList()) {
 								for (Ev mapEv: map.getEvList()) {
 									Concept concept = new Concept(mapEv.getConceptId(),
-											"-"/*getSCTId(mapEv.getConceptId())*/,
+											getSCTId(mapEv.getConceptId()),
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
 											TextProcessor.getPOSTagsAsString(pcm.getPhrase().getPhraseText()).replaceAll("(\\w|-|\\,|\\.|\\d|\\^)*/(?=.)", "")/*pcm.getPhrase().getPhraseText()*/,
@@ -306,19 +295,17 @@ public class ConceptExtractor {
 	
 
 	private String getSCTId(String id){
-		DBConnector db = new DBConnector(DB_URL, USER, PASS);
-		String sql = "SELECT conceptid FROM table WHERE cui=\""+id+"\"";
+		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US'";
 		String sctid = "-";
 		try {
 			ResultSet rs = db.performQuery(sql);
 			while(rs.next()){
-				sctid = rs.getString("conceptid");
+				sctid = rs.getString("SCUI");
 			}
 			rs.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		db.endConnector();
 		return sctid;
 	}
 }
