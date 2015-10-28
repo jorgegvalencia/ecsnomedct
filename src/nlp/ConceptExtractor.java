@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import db.DBAvailabilityException;
 import db.DBConnector;
+import exceptions.DBAvailabilityException;
 import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
 import gov.nih.nlm.nls.metamap.ConceptPair;
 import gov.nih.nlm.nls.metamap.Ev;

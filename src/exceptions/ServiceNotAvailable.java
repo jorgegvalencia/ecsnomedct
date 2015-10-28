@@ -1,4 +1,4 @@
-package app;
+package exceptions;
 
 public class ServiceNotAvailable extends Exception {
 

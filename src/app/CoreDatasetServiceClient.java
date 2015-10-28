@@ -2,6 +2,7 @@ package app;
 
 import java.util.List;
 
+import exceptions.ServiceNotAvailable;
 import norm.CoreDatasetService;
 import norm.CoreDatasetServicePortType;
 import norm.NormalizedExpression;
