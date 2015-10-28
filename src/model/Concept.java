@@ -62,6 +62,15 @@ public class Concept {
 	public void setNormalForm(String normalForm) {
 		this.normalForm = normalForm;
 	}
+	
+	public void print(){
+		System.out.format("%8s|%9s|%-30s|%50s\t%s\n",
+				cui,
+				sctid,
+				preferedName,
+				"["+semTypesString()+"]",
+				"Phrase: "+phrase);
+	}
 
 	private String resolveST(String st){
 		String result="";

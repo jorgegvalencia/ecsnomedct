@@ -38,9 +38,7 @@ public class EligibilityCriteria {
 			System.out.println("Type: N/A");
 		}
 		for(Concept concept: concepts){
-			//System.out.println("Noun Phrase: "+phrase);
-			System.out.format("%8s|%9s|%-30s|%40s\t%s\n",
-					concept.getCui(),concept.getSctid(),concept.getPreferedName(),"["+concept.semTypesString()+"]","Phrase: "+concept.getPhrase());
+			concept.print();
 		}
 	}
 	

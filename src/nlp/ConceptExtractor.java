@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import db.DBAvailabilityException;
 import db.DBConnector;
 import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
 import gov.nih.nlm.nls.metamap.ConceptPair;
@@ -44,54 +45,63 @@ public class ConceptExtractor {
 	}
 
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
-		db = new DBConnector(DB_URL, USER, PASS);
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		int type = 0;
-		// Process raw criteria
-		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
-		// Get the utterances for each EC
-		List<String> uttList = getUtterancesFromText(criteria);
-		// for each utterance
-		for(String utt: uttList){
-			if(utt.contains("Inclusion") || utt.contains("inclusion")){
-				type = 1;
+		try {
+			db = new DBConnector(DB_URL, USER, PASS);
+			int type = 0;
+			// Process raw criteria
+			String criteria = TextProcessor.ProcessEligibilityCriteria(text);
+			// Get the utterances for each EC
+			List<String> uttList = getUtterancesFromText(criteria);
+			// for each utterance
+			for(String utt: uttList){
+				if(utt.contains("Inclusion") || utt.contains("inclusion")){
+					type = 1;
+				}
+				else if(utt.contains("Exclusion") || utt.contains("exclusion")){
+					type = 2;
+				}
+				// get the concepts from the utterance
+				List<Concept> concepts = getConceptsFromText(utt);
+				// create EligibilityCriteria object
+				EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+				ecList.add(ec);
 			}
-			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
-				type = 2;
-			}
-			// get the concepts from the utterance
-			List<Concept> concepts = getConceptsFromText(utt);
-			// create EligibilityCriteria object
-			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
-			ecList.add(ec);
+			db.endConnector();
+		} catch (DBAvailabilityException e) {
+			System.err.println("Metathesaurus databse is not available.");
 		}
-		db.endConnector();
 		return ecList;
 	}
 	
 	public List<EligibilityCriteria> getEligibilityCriteriaFromTextBeta(String text){
-		db = new DBConnector(DB_URL, USER, PASS);
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		int type = 0;
-		// Process raw criteria
-		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
-		// Get the utterances for each EC
-		List<String> uttList = getUtterancesFromText(criteria);
-		// for each utterance
-		for(String utt: uttList){
-			if(utt.contains("Inclusion") || utt.contains("inclusion")){
-				type = 1;
+		try {
+			db = new DBConnector(DB_URL, USER, PASS);
+			int type = 0;
+			// Process raw criteria
+			String criteria = TextProcessor.ProcessEligibilityCriteria(text);
+			// Get the utterances for each EC
+			List<String> uttList = getUtterancesFromText(criteria);
+			// for each utterance
+			for(String utt: uttList){
+				if(utt.contains("Inclusion") || utt.contains("inclusion")){
+					type = 1;
+				}
+				else if(utt.contains("Exclusion") || utt.contains("exclusion")){
+					type = 2;
+				}
+				// get the concepts from the utterance
+				List<Concept> concepts = getConceptsFromTextBeta(utt);
+				// create EligibilityCriteria object
+				EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+				ecList.add(ec);
 			}
-			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
-				type = 2;
-			}
-			// get the concepts from the utterance
-			List<Concept> concepts = getConceptsFromTextBeta(utt);
-			// create EligibilityCriteria object
-			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
-			ecList.add(ec);
+			db.endConnector();
+		} catch (DBAvailabilityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		db.endConnector();
 		return ecList;
 	}
 	
@@ -297,12 +307,16 @@ public class ConceptExtractor {
 	private String getSCTId(String id){
 		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US'";
 		String sctid = "-";
+		if(db==null)
+			return sctid;
 		try {
 			ResultSet rs = db.performQuery(sql);
-			while(rs.next()){
-				sctid = rs.getString("SCUI");
+			if(rs!=null){
+				while(rs.next()){
+					sctid = rs.getString("SCUI");
+				}
+				rs.close();
 			}
-			rs.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

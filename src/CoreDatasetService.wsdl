@@ -1,0 +1,816 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:ns="http://CoreDataset" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:ax25="http://model.openrdf.org/xsd" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:ax23="http://NormalForm/xsd" xmlns:ax21="http://CoreDataset/xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://CoreDataset">
+    <wsdl:documentation>
+		Please Type your service description here
+	</wsdl:documentation>
+    <wsdl:types>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://CoreDataset/xsd">
+            <xs:complexType name="kinshipConcepts">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="parent" nillable="true" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="siblings" nillable="true" type="ax21:Concept"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="Concept">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="code" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="label" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="normalizedConcept">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="JSON" nillable="true" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="alternatives" nillable="true" type="ax21:classifiedConcept"/>
+                    <xs:element minOccurs="0" name="classCode" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="code" nillable="true" type="ax21:classifiedConcept"/>
+                    <xs:element minOccurs="0" name="codeOrig" nillable="true" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="entities" nillable="true" type="ax21:entityRelationship"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="relationshipPair" nillable="true" type="ax21:classifiedRelationship"/>
+                    <xs:element minOccurs="0" name="text" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="classifiedConcept">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="attribute" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="code" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="label" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="table" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="entityRelationship">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="codeOrig" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="concept" nillable="true" type="ax21:Concept"/>
+                    <xs:element minOccurs="0" name="entityClassCode" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="participationTypeCode" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="relationship" nillable="true" type="ax21:Concept"/>
+                    <xs:element minOccurs="0" name="roleClassCode" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="roleCode" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="classifiedRelationship">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="codeOrig" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="concept" nillable="true" type="ax21:classifiedConcept"/>
+                    <xs:element minOccurs="0" name="relationship" nillable="true" type="ax21:Concept"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://model.openrdf.org/xsd">
+            <xs:complexType name="Value">
+                <xs:sequence/>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://NormalForm/xsd">
+            <xs:complexType name="NormalizedExpression">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="focusConcept" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="focusConceptTitle" nillable="true" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="relationships" nillable="true" type="ax23:SnomedRelationship"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="SnomedRelationship">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="relationship" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="relationshipTitle" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="relationshipValue" nillable="true" type="ax23:NormalizedExpression"/>
+                    <xs:element minOccurs="0" name="relationshipValueTitle" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema xmlns:ax26="http://model.openrdf.org/xsd" xmlns:ax24="http://NormalForm/xsd" xmlns:ax22="http://CoreDataset/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://CoreDataset">
+            <xs:import namespace="http://CoreDataset/xsd"/>
+            <xs:import namespace="http://NormalForm/xsd"/>
+            <xs:import namespace="http://model.openrdf.org/xsd"/>
+            <xs:element name="getParents">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="concept" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getParentsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CD2CDM">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="term" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CD2CDMResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getOWLVersion">
+                <xs:complexType>
+                    <xs:sequence/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getOWLVersionResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getNormalFormVersion">
+                <xs:complexType>
+                    <xs:sequence/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getNormalFormVersionResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="expandQuery">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="concept" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="expandQueryResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getTermBindingVersion">
+                <xs:complexType>
+                    <xs:sequence/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getTermBindingVersionResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getRootConcept">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="term" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getRootConceptResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getServiceVersion">
+                <xs:complexType>
+                    <xs:sequence/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getServiceVersionResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getNextGen">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="terms" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getNextGenResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="ax21:kinshipConcepts"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CD2CDMNEW">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="term" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CD2CDMNEWResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="ax21:normalizedConcept"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CDM2CD">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="term" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CDM2CDResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getTillGranparents">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="concept" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getTillGranparentsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getShortNormalForm">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="term" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getShortNormalFormResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="ax23:NormalizedExpression"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="publicExecuteQuery">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="concept" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="binding" nillable="true" type="ax25:Value"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="publicExecuteQueryResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="getOWLVersionRequest">
+        <wsdl:part name="parameters" element="ns:getOWLVersion"/>
+    </wsdl:message>
+    <wsdl:message name="getOWLVersionResponse">
+        <wsdl:part name="parameters" element="ns:getOWLVersionResponse"/>
+    </wsdl:message>
+    <wsdl:message name="publicExecuteQueryRequest">
+        <wsdl:part name="parameters" element="ns:publicExecuteQuery"/>
+    </wsdl:message>
+    <wsdl:message name="publicExecuteQueryResponse">
+        <wsdl:part name="parameters" element="ns:publicExecuteQueryResponse"/>
+    </wsdl:message>
+    <wsdl:message name="CD2CDMNEWRequest">
+        <wsdl:part name="parameters" element="ns:CD2CDMNEW"/>
+    </wsdl:message>
+    <wsdl:message name="CD2CDMNEWResponse">
+        <wsdl:part name="parameters" element="ns:CD2CDMNEWResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getRootConceptRequest">
+        <wsdl:part name="parameters" element="ns:getRootConcept"/>
+    </wsdl:message>
+    <wsdl:message name="getRootConceptResponse">
+        <wsdl:part name="parameters" element="ns:getRootConceptResponse"/>
+    </wsdl:message>
+    <wsdl:message name="CDM2CDRequest">
+        <wsdl:part name="parameters" element="ns:CDM2CD"/>
+    </wsdl:message>
+    <wsdl:message name="CDM2CDResponse">
+        <wsdl:part name="parameters" element="ns:CDM2CDResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getServiceVersionRequest">
+        <wsdl:part name="parameters" element="ns:getServiceVersion"/>
+    </wsdl:message>
+    <wsdl:message name="getServiceVersionResponse">
+        <wsdl:part name="parameters" element="ns:getServiceVersionResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getParentsRequest">
+        <wsdl:part name="parameters" element="ns:getParents"/>
+    </wsdl:message>
+    <wsdl:message name="getParentsResponse">
+        <wsdl:part name="parameters" element="ns:getParentsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getNormalFormVersionRequest">
+        <wsdl:part name="parameters" element="ns:getNormalFormVersion"/>
+    </wsdl:message>
+    <wsdl:message name="getNormalFormVersionResponse">
+        <wsdl:part name="parameters" element="ns:getNormalFormVersionResponse"/>
+    </wsdl:message>
+    <wsdl:message name="CD2CDMRequest">
+        <wsdl:part name="parameters" element="ns:CD2CDM"/>
+    </wsdl:message>
+    <wsdl:message name="CD2CDMResponse">
+        <wsdl:part name="parameters" element="ns:CD2CDMResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getShortNormalFormRequest">
+        <wsdl:part name="parameters" element="ns:getShortNormalForm"/>
+    </wsdl:message>
+    <wsdl:message name="getShortNormalFormResponse">
+        <wsdl:part name="parameters" element="ns:getShortNormalFormResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getTillGranparentsRequest">
+        <wsdl:part name="parameters" element="ns:getTillGranparents"/>
+    </wsdl:message>
+    <wsdl:message name="getTillGranparentsResponse">
+        <wsdl:part name="parameters" element="ns:getTillGranparentsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getTermBindingVersionRequest">
+        <wsdl:part name="parameters" element="ns:getTermBindingVersion"/>
+    </wsdl:message>
+    <wsdl:message name="getTermBindingVersionResponse">
+        <wsdl:part name="parameters" element="ns:getTermBindingVersionResponse"/>
+    </wsdl:message>
+    <wsdl:message name="getNextGenRequest">
+        <wsdl:part name="parameters" element="ns:getNextGen"/>
+    </wsdl:message>
+    <wsdl:message name="getNextGenResponse">
+        <wsdl:part name="parameters" element="ns:getNextGenResponse"/>
+    </wsdl:message>
+    <wsdl:message name="expandQueryRequest">
+        <wsdl:part name="parameters" element="ns:expandQuery"/>
+    </wsdl:message>
+    <wsdl:message name="expandQueryResponse">
+        <wsdl:part name="parameters" element="ns:expandQueryResponse"/>
+    </wsdl:message>
+    <wsdl:portType name="CoreDatasetServicePortType">
+        <wsdl:operation name="getOWLVersion">
+            <wsdl:input message="ns:getOWLVersionRequest" wsaw:Action="urn:getOWLVersion"/>
+            <wsdl:output message="ns:getOWLVersionResponse" wsaw:Action="urn:getOWLVersionResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="publicExecuteQuery">
+            <wsdl:input message="ns:publicExecuteQueryRequest" wsaw:Action="urn:publicExecuteQuery"/>
+            <wsdl:output message="ns:publicExecuteQueryResponse" wsaw:Action="urn:publicExecuteQueryResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDMNEW">
+            <wsdl:input message="ns:CD2CDMNEWRequest" wsaw:Action="urn:CD2CDMNEW"/>
+            <wsdl:output message="ns:CD2CDMNEWResponse" wsaw:Action="urn:CD2CDMNEWResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getRootConcept">
+            <wsdl:input message="ns:getRootConceptRequest" wsaw:Action="urn:getRootConcept"/>
+            <wsdl:output message="ns:getRootConceptResponse" wsaw:Action="urn:getRootConceptResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="CDM2CD">
+            <wsdl:input message="ns:CDM2CDRequest" wsaw:Action="urn:CDM2CD"/>
+            <wsdl:output message="ns:CDM2CDResponse" wsaw:Action="urn:CDM2CDResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getServiceVersion">
+            <wsdl:input message="ns:getServiceVersionRequest" wsaw:Action="urn:getServiceVersion"/>
+            <wsdl:output message="ns:getServiceVersionResponse" wsaw:Action="urn:getServiceVersionResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getParents">
+            <wsdl:input message="ns:getParentsRequest" wsaw:Action="urn:getParents"/>
+            <wsdl:output message="ns:getParentsResponse" wsaw:Action="urn:getParentsResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getNormalFormVersion">
+            <wsdl:input message="ns:getNormalFormVersionRequest" wsaw:Action="urn:getNormalFormVersion"/>
+            <wsdl:output message="ns:getNormalFormVersionResponse" wsaw:Action="urn:getNormalFormVersionResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDM">
+            <wsdl:input message="ns:CD2CDMRequest" wsaw:Action="urn:CD2CDM"/>
+            <wsdl:output message="ns:CD2CDMResponse" wsaw:Action="urn:CD2CDMResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getShortNormalForm">
+            <wsdl:input message="ns:getShortNormalFormRequest" wsaw:Action="urn:getShortNormalForm"/>
+            <wsdl:output message="ns:getShortNormalFormResponse" wsaw:Action="urn:getShortNormalFormResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getTillGranparents">
+            <wsdl:input message="ns:getTillGranparentsRequest" wsaw:Action="urn:getTillGranparents"/>
+            <wsdl:output message="ns:getTillGranparentsResponse" wsaw:Action="urn:getTillGranparentsResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getTermBindingVersion">
+            <wsdl:input message="ns:getTermBindingVersionRequest" wsaw:Action="urn:getTermBindingVersion"/>
+            <wsdl:output message="ns:getTermBindingVersionResponse" wsaw:Action="urn:getTermBindingVersionResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="getNextGen">
+            <wsdl:input message="ns:getNextGenRequest" wsaw:Action="urn:getNextGen"/>
+            <wsdl:output message="ns:getNextGenResponse" wsaw:Action="urn:getNextGenResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="expandQuery">
+            <wsdl:input message="ns:expandQueryRequest" wsaw:Action="urn:expandQuery"/>
+            <wsdl:output message="ns:expandQueryResponse" wsaw:Action="urn:expandQueryResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="CoreDatasetServiceSoap11Binding" type="ns:CoreDatasetServicePortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getOWLVersion">
+            <soap:operation soapAction="urn:getOWLVersion" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="publicExecuteQuery">
+            <soap:operation soapAction="urn:publicExecuteQuery" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDMNEW">
+            <soap:operation soapAction="urn:CD2CDMNEW" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getRootConcept">
+            <soap:operation soapAction="urn:getRootConcept" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CDM2CD">
+            <soap:operation soapAction="urn:CDM2CD" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getServiceVersion">
+            <soap:operation soapAction="urn:getServiceVersion" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getParents">
+            <soap:operation soapAction="urn:getParents" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDM">
+            <soap:operation soapAction="urn:CD2CDM" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNormalFormVersion">
+            <soap:operation soapAction="urn:getNormalFormVersion" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getShortNormalForm">
+            <soap:operation soapAction="urn:getShortNormalForm" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTillGranparents">
+            <soap:operation soapAction="urn:getTillGranparents" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTermBindingVersion">
+            <soap:operation soapAction="urn:getTermBindingVersion" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNextGen">
+            <soap:operation soapAction="urn:getNextGen" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="expandQuery">
+            <soap:operation soapAction="urn:expandQuery" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="CoreDatasetServiceSoap12Binding" type="ns:CoreDatasetServicePortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getOWLVersion">
+            <soap12:operation soapAction="urn:getOWLVersion" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="publicExecuteQuery">
+            <soap12:operation soapAction="urn:publicExecuteQuery" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDMNEW">
+            <soap12:operation soapAction="urn:CD2CDMNEW" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getRootConcept">
+            <soap12:operation soapAction="urn:getRootConcept" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CDM2CD">
+            <soap12:operation soapAction="urn:CDM2CD" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getServiceVersion">
+            <soap12:operation soapAction="urn:getServiceVersion" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getParents">
+            <soap12:operation soapAction="urn:getParents" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDM">
+            <soap12:operation soapAction="urn:CD2CDM" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNormalFormVersion">
+            <soap12:operation soapAction="urn:getNormalFormVersion" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getShortNormalForm">
+            <soap12:operation soapAction="urn:getShortNormalForm" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTillGranparents">
+            <soap12:operation soapAction="urn:getTillGranparents" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTermBindingVersion">
+            <soap12:operation soapAction="urn:getTermBindingVersion" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNextGen">
+            <soap12:operation soapAction="urn:getNextGen" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="expandQuery">
+            <soap12:operation soapAction="urn:expandQuery" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="CoreDatasetServiceHttpBinding" type="ns:CoreDatasetServicePortType">
+        <http:binding verb="POST"/>
+        <wsdl:operation name="getOWLVersion">
+            <http:operation location="getOWLVersion"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="publicExecuteQuery">
+            <http:operation location="publicExecuteQuery"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDMNEW">
+            <http:operation location="CD2CDMNEW"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getRootConcept">
+            <http:operation location="getRootConcept"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CDM2CD">
+            <http:operation location="CDM2CD"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getServiceVersion">
+            <http:operation location="getServiceVersion"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getParents">
+            <http:operation location="getParents"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="CD2CDM">
+            <http:operation location="CD2CDM"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNormalFormVersion">
+            <http:operation location="getNormalFormVersion"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getShortNormalForm">
+            <http:operation location="getShortNormalForm"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTillGranparents">
+            <http:operation location="getTillGranparents"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getTermBindingVersion">
+            <http:operation location="getTermBindingVersion"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getNextGen">
+            <http:operation location="getNextGen"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="expandQuery">
+            <http:operation location="expandQuery"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="CoreDatasetService">
+        <wsdl:port name="CoreDatasetServiceHttpsSoap11Endpoint" binding="ns:CoreDatasetServiceSoap11Binding">
+            <soap:address location="https://kandel.dia.fi.upm.es:8443/CoreDatasetService2/services/CoreDatasetService.CoreDatasetServiceHttpsSoap11Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="CoreDatasetServiceHttpsSoap12Endpoint" binding="ns:CoreDatasetServiceSoap12Binding">
+            <soap12:address location="https://kandel.dia.fi.upm.es:8443/CoreDatasetService2/services/CoreDatasetService.CoreDatasetServiceHttpsSoap12Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="CoreDatasetServiceHttpsEndpoint" binding="ns:CoreDatasetServiceHttpBinding">
+            <http:address location="https://kandel.dia.fi.upm.es:8443/CoreDatasetService2/services/CoreDatasetService.CoreDatasetServiceHttpsEndpoint/"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

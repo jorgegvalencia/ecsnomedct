@@ -14,7 +14,7 @@ public class DBConnector {
 	private Connection conn = null;
 	private Statement stmt = null;
 
-	public DBConnector(String db_url, String user, String pass){
+	public DBConnector(String db_url, String user, String pass) throws DBAvailabilityException{
 		//STEP 2: Register JDBC driver
 		this.db = db_url;
 		this.user = user;
@@ -24,50 +24,52 @@ public class DBConnector {
 			//Open a connection
 			conn = DriverManager.getConnection(db,user,pass);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace();		
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Database "+db+" is not available.");
 		}
 	}
 
 	public ResultSet performQuery(String sql){
 		ResultSet rs = null;
-		try {
-			if(stmt!=null){
-				stmt.close();
+		if(conn!=null){
+			try {
+				if(stmt!=null){
+					stmt.close();
+				}
+				//Execute a query
+				stmt = conn.createStatement();
+				rs = stmt.executeQuery(sql);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			//Execute a query
-			stmt = conn.createStatement();
-			rs = stmt.executeQuery(sql);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return rs;
 	}
 
 	public void endConnector(){
-		try {
-			conn.close();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}finally{
-			//finally block used to close resources
-			try{
-				if(stmt!=null)
-					stmt.close();
-			}catch(SQLException se2){
-			}// nothing we can do
-			try{
-				if(conn!=null)
-					conn.close();
-			}catch(SQLException se){
-				se.printStackTrace();
-			}//end finally try
-		}//end try
+		if(initialized()){
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally{
+				//finally block used to close resources
+				try{
+					if(stmt!=null)
+						stmt.close();
+				}catch(SQLException se2){
+				}// nothing we can do
+				try{
+					if(conn!=null)
+						conn.close();
+				}catch(SQLException se){
+					se.printStackTrace();
+				}//end finally try
+			}//end try
+		}
 	}
 	
 	public void showCredentials(){
@@ -75,5 +77,9 @@ public class DBConnector {
 		System.out.println("Database:"+db);
 		System.out.println("User:"+user);
 		System.out.println("Password:"+pass);
+	}
+	
+	private boolean initialized(){
+		return (conn==null || stmt==null) ? false : true;
 	}
 }

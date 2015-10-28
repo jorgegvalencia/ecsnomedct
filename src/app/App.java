@@ -31,39 +31,46 @@ public class App {
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
-	
+
 	public static void norm(){
 		String sctid = "71620000";
-		CoreDatasetServiceClient normalize = new CoreDatasetServiceClient();
-		normalize.prettyPrintNormalForm(sctid);
-		String normform = normalize.getNormalFormAsString(sctid);
-		System.out.println(normform);
+		CoreDatasetServiceClient normalize;
+		try {
+			normalize = new CoreDatasetServiceClient();
+			normalize.prettyPrintNormalForm(sctid);
+			String normform = normalize.getNormalFormAsString(sctid);
+			System.out.println(normform);
+		} catch (ServiceNotAvailable e) {
+
+		}
 	}
-	
+
 	public static void metamap(){
 		// NCT01358877
 		// NCT00148876
 		// NCT02102490
 		// NCT01633060
 		// NCT01700257
-		CTManager ctm = new CTManager();
-		CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
-		String nctid = "NCT01358877";
-		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
-		//ct.print();
-		String criteria = ct.getCriteria();
-		ConceptExtractor ce = new ConceptExtractor();
-		//ctm.showTrialsFiles();
-		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
-		for(EligibilityCriteria ec: ecList){
-			if(!ec.getConcepts().isEmpty()){
-				ec.print();
-				System.out.println("{");
-				for(Concept c: ec.getConcepts()){
-					System.out.println(normalizer.getNormalFormAsString(c.getSctid()));
+		try {
+			CTManager ctm = new CTManager();
+			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
+			String nctid = "NCT01358877";
+			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
+			String criteria = ct.getCriteria();
+			ConceptExtractor ce = new ConceptExtractor();
+			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+			for(EligibilityCriteria ec: ecList){
+				if(!ec.getConcepts().isEmpty()){
+					ec.print();
+					System.out.println("{");
+					for(Concept c: ec.getConcepts()){
+						System.out.println(normalizer.getNormalFormAsString(c.getSctid(),true));
+					}
+					System.out.println("}");
 				}
-				System.out.println("}");
 			}
+		} catch (ServiceNotAvailable e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -107,7 +114,7 @@ public class App {
 				return a.getValue().compareTo(b.getValue());
 			}
 		});
-		
+
 		System.out.println("Total trials: "+j);
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
@@ -198,7 +205,7 @@ public class App {
 				return a.getValue().compareTo(b.getValue());
 			}
 		});*/
-		
+
 		System.out.println("Total trials: "+j);
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
@@ -214,7 +221,7 @@ public class App {
 					frecuency*100,
 					semmap.get(entries.get(entries.size() - i - 1).getKey()));
 		}
-		
+
 		/*System.out.println("Total distinct patterns:"+entries2.size());
 		System.out.format("%30s | %-15s | %-30s\n","Frecuency","Appearances","Phrase");
 		for(int i = 0; i < 50 && i<entries2.size(); i++){
@@ -224,7 +231,7 @@ public class App {
 					entries2.get(entries2.size() - i - 1).getValue(),
 					entries2.get(entries2.size() - i - 1).getKey());
 		}*/
-		
+
 		try{
 			FileWriter writer = new FileWriter("frecuencies.csv");
 			writer.append("CUI;SCTID;Concept;Appearances;Frecuency;SemanticType\n");
@@ -246,7 +253,7 @@ public class App {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void clusterDependencies(){
 		CTManager ctm = new CTManager();
 		Map<String,Integer> patternmap = new HashMap<String,Integer>();
