@@ -1,11 +1,7 @@
-package app;
+package coredataset;
 
 import java.util.List;
 
-import coredataset.CoreDatasetService;
-import coredataset.CoreDatasetServicePortType;
-import coredataset.NormalizedExpression;
-import coredataset.SnomedRelationship;
 import exceptions.ServiceNotAvailable;
 
 public class CoreDatasetServiceClient{
@@ -102,7 +98,7 @@ public class CoreDatasetServiceClient{
 		return result;
 	}
 
-	public void prettyPrintNormalForm(String term){
+/*	public void prettyPrintNormalForm(String term){
 		NormalizedExpression expression = port.getShortNormalForm(term);
 		String focusConceptCode = expression.getFocusConcept().getValue();
 		String focusConcept = expression.getFocusConceptTitle().getValue();
@@ -110,13 +106,13 @@ public class CoreDatasetServiceClient{
 			List<SnomedRelationship> relationshipList = expression.getRelationships();
 			System.out.print(focusConceptCode+"|"+focusConcept+"|");
 			if(!relationshipList.isEmpty()){
-				System.out.print(":\n");
+				System.out.print(":");
 				for(SnomedRelationship snrel: relationshipList){
 					printSnomedRelationship(snrel);
 				}
 			}
 			else
-				System.out.println("\n");
+				System.out.print("\n");
 		}
 	}
 	
@@ -135,8 +131,7 @@ public class CoreDatasetServiceClient{
 	private void printSnomedRelationship(SnomedRelationship snrel){
 		String relCode = snrel.getRelationship().getValue();
 		String relTerm = snrel.getRelationshipTitle().getValue();
-		System.out.print("\t"+relCode+"|"+relTerm+"|=");
+		System.out.print("\n\t"+relCode+"|"+relTerm+"|=");
 		printNormalizedExpression(snrel.getRelationshipValue().getValue());
-		System.out.print("\n");
-	}
+	}*/
 }
