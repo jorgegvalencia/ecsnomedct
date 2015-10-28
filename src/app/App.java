@@ -19,11 +19,11 @@ import model.Concept;
 import model.EligibilityCriteria;
 
 public class App {
-	private static final String trial1 = "NCT01358877";
-	private static final String trial2 = "NCT00148876";
-	private static final String trial3 = "NCT02102490";
-	private static final String trial4 = "NCT01633060";
-	private static final String trial5 = "NCT01700257";
+	private static final String TRIAL1 = "NCT01358877";
+	private static final String TRIAL2 = "NCT00148876";
+	private static final String TRIAL3 = "NCT02102490";
+	private static final String TRIAL4 = "NCT01633060";
+	private static final String TRIAL5 = "NCT01700257";
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
@@ -31,6 +31,7 @@ public class App {
 			//norm();
 			//metamap();
 			//clusterConcepts();
+			//clusterConceptsBeta();
 			//clusterDependencies();
 			//
 		long endTime = System.nanoTime();
@@ -46,7 +47,7 @@ public class App {
 			String normform = normalize.getNormalFormAsString(sctid);
 			System.out.println(normform);
 		} catch (ServiceNotAvailable e) {
-			//
+			System.exit(1);
 		}
 	}
 
@@ -54,7 +55,7 @@ public class App {
 		try {
 			CTManager ctm = new CTManager();
 			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
-			String nctid = trial1;
+			String nctid = TRIAL1;
 			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 			String criteria = ct.getCriteria();
 			ConceptExtractor ce = new ConceptExtractor();

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import db.DBConnector;
-import exceptions.DBAvailabilityException;
 import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
 import gov.nih.nlm.nls.metamap.ConceptPair;
 import gov.nih.nlm.nls.metamap.Ev;
@@ -46,62 +45,53 @@ public class ConceptExtractor {
 
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		try {
-			db = new DBConnector(DB_URL, USER, PASS);
-			int type = 0;
-			// Process raw criteria
-			String criteria = TextProcessor.ProcessEligibilityCriteria(text);
-			// Get the utterances for each EC
-			List<String> uttList = getUtterancesFromText(criteria);
-			// for each utterance
-			for(String utt: uttList){
-				if(utt.contains("Inclusion") || utt.contains("inclusion")){
-					type = 1;
-				}
-				else if(utt.contains("Exclusion") || utt.contains("exclusion")){
-					type = 2;
-				}
-				// get the concepts from the utterance
-				List<Concept> concepts = getConceptsFromText(utt);
-				// create EligibilityCriteria object
-				EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
-				ecList.add(ec);
+		db = new DBConnector(DB_URL, USER, PASS);
+		int type = 0;
+		// Process raw criteria
+		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
+		// Get the utterances for each EC
+		List<String> uttList = getUtterancesFromText(criteria);
+		// for each utterance
+		for(String utt: uttList){
+			if(utt.contains("Inclusion") || utt.contains("inclusion")){
+				type = 1;
 			}
-			db.endConnector();
-		} catch (DBAvailabilityException e) {
-			System.err.println("Metathesaurus databse is not available.");
+			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
+				type = 2;
+			}
+			// get the concepts from the utterance
+			List<Concept> concepts = getConceptsFromText(utt);
+			// create EligibilityCriteria object
+			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+			ecList.add(ec);
 		}
+		db.endConnector();
 		return ecList;
 	}
 	
 	public List<EligibilityCriteria> getEligibilityCriteriaFromTextBeta(String text){
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		try {
-			db = new DBConnector(DB_URL, USER, PASS);
-			int type = 0;
-			// Process raw criteria
-			String criteria = TextProcessor.ProcessEligibilityCriteria(text);
-			// Get the utterances for each EC
-			List<String> uttList = getUtterancesFromText(criteria);
-			// for each utterance
-			for(String utt: uttList){
-				if(utt.contains("Inclusion") || utt.contains("inclusion")){
-					type = 1;
-				}
-				else if(utt.contains("Exclusion") || utt.contains("exclusion")){
-					type = 2;
-				}
-				// get the concepts from the utterance
-				List<Concept> concepts = getConceptsFromTextBeta(utt);
-				// create EligibilityCriteria object
-				EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
-				ecList.add(ec);
+		db = new DBConnector(DB_URL, USER, PASS);
+		int type = 0;
+		// Process raw criteria
+		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
+		// Get the utterances for each EC
+		List<String> uttList = getUtterancesFromText(criteria);
+		// for each utterance
+		for(String utt: uttList){
+			if(utt.contains("Inclusion") || utt.contains("inclusion")){
+				type = 1;
 			}
-			db.endConnector();
-		} catch (DBAvailabilityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
+				type = 2;
+			}
+			// get the concepts from the utterance
+			List<Concept> concepts = getConceptsFromTextBeta(utt);
+			// create EligibilityCriteria object
+			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+			ecList.add(ec);
 		}
+		db.endConnector();
 		return ecList;
 	}
 	

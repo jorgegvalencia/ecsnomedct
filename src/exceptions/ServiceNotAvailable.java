@@ -6,7 +6,6 @@ public class ServiceNotAvailable extends Exception {
 	
 	public ServiceNotAvailable(){
 		System.err.println("The service \"CoreDatasetService\" is not available.");
-		System.exit(1);
 	}
 
 }
