@@ -2,11 +2,11 @@ package app;
 
 import java.util.List;
 
+import coredataset.CoreDatasetService;
+import coredataset.CoreDatasetServicePortType;
+import coredataset.NormalizedExpression;
+import coredataset.SnomedRelationship;
 import exceptions.ServiceNotAvailable;
-import norm.CoreDatasetService;
-import norm.CoreDatasetServicePortType;
-import norm.NormalizedExpression;
-import norm.SnomedRelationship;
 
 public class CoreDatasetServiceClient{
 	private CoreDatasetService service;

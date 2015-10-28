@@ -19,17 +19,12 @@ import model.Concept;
 import model.EligibilityCriteria;
 
 public class App {
-	private static final String TRIAL1 = "NCT01358877";
-	private static final String TRIAL2 = "NCT00148876";
-	private static final String TRIAL3 = "NCT02102490";
-	private static final String TRIAL4 = "NCT01633060";
-	private static final String TRIAL5 = "NCT01700257";
-
+	private static final String[] TRIALS = {"NCT01358877","NCT00148876","NCT02102490","NCT01633060","NCT01700257"};
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
 			//
 			//norm();
-			//metamap();
+			metamap();
 			//clusterConcepts();
 			//clusterConceptsBeta();
 			//clusterDependencies();
@@ -55,18 +50,17 @@ public class App {
 		try {
 			CTManager ctm = new CTManager();
 			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
-			String nctid = TRIAL1;
+			String nctid = TRIALS[0];
 			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 			String criteria = ct.getCriteria();
 			ConceptExtractor ce = new ConceptExtractor();
 			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 			for(EligibilityCriteria ec: ecList){
 				if(!ec.getConcepts().isEmpty()){
-					System.out.println("{");
+					ec.print();
 					for(Concept c: ec.getConcepts()){
-						System.out.println(normalizer.getNormalFormAsString(c.getSctid()));
+						System.out.println("> "+normalizer.getNormalFormAsString(c.getSctid()));
 					}
-					System.out.println("}");
 				}
 			}
 		} catch (ServiceNotAvailable e) {
