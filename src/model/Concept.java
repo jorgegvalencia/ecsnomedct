@@ -18,6 +18,7 @@ public class Concept {
 		this.preferedName = preferedName;
 		this.phrase = phrase;
 		this.semtypes = semtypes;
+		this.normalForm="-";
 	}
 
 	public String getCui() {
@@ -70,6 +71,14 @@ public class Concept {
 				preferedName,
 				"["+semTypesString()+"]",
 				"Phrase: "+phrase);
+	}
+	
+	public void print2(){
+		System.out.format("%8s|%9s|%-30s|%s\n",
+				cui,
+				sctid,
+				preferedName,
+				normalForm);
 	}
 
 	private String resolveST(String st){

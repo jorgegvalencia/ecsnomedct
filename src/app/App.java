@@ -21,21 +21,28 @@ import model.EligibilityCriteria;
 
 public class App {
 	private static final String[] TRIALS = {"NCT01358877","NCT00148876","NCT02102490","NCT01633060","NCT01700257"};
+	
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
 			//normalizationTest();
 			metamapTest();
+			//statusTest();
 			//clusterConcepts();
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
+	
+	public static void statusTest(){
+		SnomedWebAPIClient api = new SnomedWebAPIClient();
+		System.out.println(api.getStatus("154432008"));
+	}
 
 	public static void normalizationTest(){
-		String sctid = "71620000";
+		String sctid = "154432008";
 		CoreDatasetServiceClient normalize;
 		try {
 			normalize = new CoreDatasetServiceClient();
-			System.out.println(normalize.getNormalFormAsString(sctid));
+			System.out.println(normalize.getNormalFormAsString(sctid,true));
 		} catch (ServiceNotAvailable e) {
 			System.exit(1);
 		}
@@ -52,12 +59,10 @@ public class App {
 			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 			for(EligibilityCriteria ec: ecList){
 				if(!ec.getConcepts().isEmpty()){
-					ec.print();
-					System.out.println("---------------- SNOMED CT Short Normal Form Concepts ----------------");
 					for(Concept c: ec.getConcepts()){
-						System.out.println("> "+normalizer.getNormalFormAsString(c.getSctid()));
+						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),true));
+						c.print2();
 					}
-					System.out.println("----------------------------------------------------------------------");
 				}
 			}
 		} catch (ServiceNotAvailable e) {

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.SnomedWebAPIClient;
 import db.DBConnector;
 import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
 import gov.nih.nlm.nls.metamap.ConceptPair;
@@ -61,32 +62,6 @@ public class ConceptExtractor {
 			}
 			// get the concepts from the utterance
 			List<Concept> concepts = getConceptsFromText(utt);
-			// create EligibilityCriteria object
-			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
-			ecList.add(ec);
-		}
-		db.endConnector();
-		return ecList;
-	}
-	
-	public List<EligibilityCriteria> getEligibilityCriteriaFromTextBeta(String text){
-		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		db = new DBConnector(DB_URL, USER, PASS);
-		int type = 0;
-		// Process raw criteria
-		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
-		// Get the utterances for each EC
-		List<String> uttList = getUtterancesFromText(criteria);
-		// for each utterance
-		for(String utt: uttList){
-			if(utt.contains("Inclusion") || utt.contains("inclusion")){
-				type = 1;
-			}
-			else if(utt.contains("Exclusion") || utt.contains("exclusion")){
-				type = 2;
-			}
-			// get the concepts from the utterance
-			List<Concept> concepts = getConceptsFromTextBeta(utt);
 			// create EligibilityCriteria object
 			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
 			ecList.add(ec);
@@ -242,8 +217,11 @@ public class ConceptExtractor {
 								// only best mapping
 								Mapping map = pcm.getMappingList().get(0);
 								for (Ev mapEv: map.getEvList()){
+									String sctid = "-";
+									if(!getSCTId(mapEv.getConceptId()).isEmpty())
+										sctid=getSCTId(mapEv.getConceptId()).get(0);
 									Concept concept = new Concept(mapEv.getConceptId(),
-											getSCTId(mapEv.getConceptId()),
+											sctid,
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
 											nounp /*pcm.getPhrase().getPhraseText()*/,
@@ -261,55 +239,23 @@ public class ConceptExtractor {
 		}
 		return concepts;
 	}
-	
-	private List<Concept> getConceptsFromTextBeta(String text){
-		List<Concept> concepts = new ArrayList<Concept>();
-		try{
-				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
-				List<Result> result = queryFromString(text);
-				for(Result res: result){
-					for(Utterance uttr: res.getUtteranceList()){
-						for (PCM pcm: uttr.getPCMList()) {
-							for (Mapping map: pcm.getMappingList()) {
-								for (Ev mapEv: map.getEvList()) {
-									Concept concept = new Concept(mapEv.getConceptId(),
-											getSCTId(mapEv.getConceptId()),
-											mapEv.getConceptName(),
-											mapEv.getPreferredName(),
-											TextProcessor.getPOSTagsAsString(pcm.getPhrase().getPhraseText()).replaceAll("(\\w|-|\\,|\\.|\\d|\\^)*/(?=.)", "")/*pcm.getPhrase().getPhraseText()*/,
-											mapEv.getSemanticTypes());
-									concepts.add(concept);
-								}
-							}
-						}
-					}
-				}
 
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return concepts;
-	}
-
-	
-
-	private String getSCTId(String id){
-		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US'";
-		String sctid = "-";
-		if(db==null)
-			return sctid;
+	private List<String> getSCTId(String id){
+		SnomedWebAPIClient api = new SnomedWebAPIClient();
+		List<String> idlist = new ArrayList<String>();
+		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US' GROUP BY SCUI";
 		try {
 			ResultSet rs = db.performQuery(sql);
 			if(rs!=null){
 				while(rs.next()){
-					sctid = rs.getString("SCUI");
+					if(api.getStatus(rs.getString("SCUI"))==1)
+						idlist.add(rs.getString("SCUI"));
 				}
 				rs.close();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return sctid;
+		return idlist;
 	}
 }
