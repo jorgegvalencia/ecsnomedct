@@ -105,9 +105,6 @@ public class CTManager {
 					case "brief_title":
 						ct.setTitle(streamReader.getElementText());
 						break;
-						/*					case "overall_status":
-						ct.setOverall_status(overall_status);
-						break;*/
 					case "start_date":
 						ct.setStartDate(streamReader.getElementText());
 						break;
@@ -148,10 +145,8 @@ public class CTManager {
 		} catch (XMLStreamException e) {
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return ct;

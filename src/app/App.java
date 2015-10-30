@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import java.util.Map;
 import coredataset.CoreDatasetServiceClient;
 import exceptions.ServiceNotAvailable;
 import nlp.ConceptExtractor;
-import nlp.TextProcessor;
 import model.ClinicalTrial;
 import model.Concept;
 import model.EligibilityCriteria;
@@ -32,11 +30,13 @@ public class App {
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
 	
+	// Test de la API SNOMEDCT https://rxnav.nlm.nih.gov/SnomedCTAPI.html
 	public static void statusTest(){
 		SnomedWebAPIClient api = new SnomedWebAPIClient();
 		System.out.println(api.getStatus("154432008"));
 	}
 
+	// Test del servicio de normalización CoreDataset de kandel.dia.fi.upm.es
 	public static void normalizationTest(){
 		String sctid = "154432008";
 		CoreDatasetServiceClient normalize;
@@ -48,14 +48,15 @@ public class App {
 		}
 	}
 
+	// Test del procesamiento de un ensayo clínico con la API metamap + normalización 
 	public static void metamapTest(){
 		try {
-			CTManager ctm = new CTManager();
-			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 			String nctid = TRIALS[0];
+			CTManager ctm = new CTManager();
+			ConceptExtractor ce = new ConceptExtractor();
+			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
 			String criteria = ct.getCriteria();
-			ConceptExtractor ce = new ConceptExtractor();
 			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 			for(EligibilityCriteria ec: ecList){
 				if(!ec.getConcepts().isEmpty()){
@@ -70,6 +71,7 @@ public class App {
 		}
 	}
 
+	// Método que crea un CSV con los conceptos de un conjunto de ensayos clínicos
 	public static void clusterConcepts(){
 		CTManager ctm = new CTManager();
 		ConceptExtractor ce = new ConceptExtractor();
@@ -151,7 +153,7 @@ public class App {
 		}
 	}
 
-	public static void clusterDependencies(){
+	/*public static void clusterDependencies(){
 		CTManager ctm = new CTManager();
 		Map<String,Integer> patternmap = new HashMap<String,Integer>();
 		int nPatterns = 0;
@@ -199,5 +201,5 @@ public class App {
 					+entries2.get(entries2.size() - i - 1).getValue(),
 					frecuency*100);
 		}
-	}
+	}*/
 }

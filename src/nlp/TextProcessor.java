@@ -1,13 +1,10 @@
 package nlp;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
-import edu.stanford.nlp.ling.CoreAnnotations;
+/*import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.ling.TaggedWord;
@@ -23,11 +20,11 @@ import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.CoreMap;*/
 
 public final class TextProcessor {
-	private static MaxentTagger tagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger");
-	private static DependencyParser parser = DependencyParser.loadFromModelFile(DependencyParser.DEFAULT_MODEL);
+	//private static MaxentTagger tagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger");
+	//private static DependencyParser parser = DependencyParser.loadFromModelFile(DependencyParser.DEFAULT_MODEL);
 	
 	private static final List<String> STOP_WORDS = new ArrayList<String>(Arrays.asList("and","by","for","in","of","or","the","to","with","no"));
 	private static final List<String> EXCLUSION_WORDS = new ArrayList<String>(Arrays.asList("about","alongside","an","anything","around","as","at",
@@ -58,7 +55,7 @@ public final class TextProcessor {
 		return refinedText;
 	}
 
-	public static String removeSW(String text){
+	public static String removeStopWords(String text){
 		String refinedText = text;
 		for(String sw: STOP_WORDS){
 			refinedText = refinedText.replaceAll("\\s"+sw+"\\s", " ");
@@ -66,7 +63,7 @@ public final class TextProcessor {
 		return refinedText;
 	}
 
-	public static String removeEW(String text){
+	public static String removeExcludedWords(String text){
 		String refinedText = text;
 		for(String ew: EXCLUSION_WORDS){
 			refinedText = refinedText.replaceAll("\\s"+ew+"\\s", " ");
@@ -74,50 +71,60 @@ public final class TextProcessor {
 		return refinedText;
 	}
 
-	public static String removeUW(String text){
+	public static String removeUncoveredWords(String text){
 		String refinedText = text;
 		for(String uw: UNCOVERED_WORDS){
 			refinedText = refinedText.replaceAll(uw, " ");
 		}
 		return refinedText;
 	}
+	
+	/**
+	 * Returns the the list of sentences that form the given text.
+	 * @param text
+	 * @return
+	 */
+	public static List<String> getSentencesFromText(String text){
+		NLPSentenceDetector sd = new NLPSentenceDetector("resources/en-sent.bin");
+		return sd.detectSentences(text);
+	}
 
-	/*public static String processNounPhrase(String phrase){
-		String refinedText = phrase;
-		return refinedText;
-	}*/
-
+	/**
+	 * Returns a POS tag list for a given phrase.
+	 * @param np
+	 * @return
+	 */
 	public static List<String> getPOSTagsAsList(String np){
 		NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
 		NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
 		return tagger.posTag(tokenizer.tokenize(np));
 	}
 
+	/**
+	 * Returns a POS tag array for a given phrase.
+	 * @param np
+	 * @return
+	 */
 	public static String[] getPOSTagsAsArray(String np){
 		NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
 		NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
 		return tagger.posTag(tokenizer.tokenizeArray(np));
 	}
 
-	public static String getPOSTagsAsString(String np){
+	/*public static String getPOSTagsAsString(String np){
 		String tagged = tagger.tagString(np);
 		tagged = tagged.replace("_", "/");
 		return tagged;
-	}
+	}*/
 	
-	public static List<String> getChunksAsList(String sentence){
+/*	public static List<String> getChunksAsList(String sentence){
 		NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
 		NLPChunker chunker = new NLPChunker("resources/en-chunker.bin");
 		NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
 		return chunker.chunk(tokenizer.tokenize(sentence),tagger.posTag(tokenizer.tokenize(sentence)));
-	}
-
-	public static List<String> getSentencesFromText(String text){
-		NLPSentenceDetector sd = new NLPSentenceDetector("resources/en-sent.bin");
-		return sd.detectSentences(text);
-	}
+	}*/
 	
-	public static void getSentences(String text){
+/*	public static void getSentences(String text){
 		Properties props = new Properties();
 		props.setProperty("annotators", "tokenize, ssplit, parse, pos");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
@@ -128,9 +135,9 @@ public final class TextProcessor {
 			System.out.println("["+sentence+"]");
 			getDependencies(sentence.toString());
 		}
-	}
+	}*/
 
-	public static List<String> getDependencies(String text){
+/*	public static List<String> getDependencies(String text){
 		List<String> list = new ArrayList<>();
 		DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(text));
 		for (List<HasWord> sentence : tokenizer) {
@@ -145,11 +152,11 @@ public final class TextProcessor {
 				}
 			}
 		}
-		/*for(String l: list){
+		for(String l: list){
 			System.out.println(l);
-		}*/
+		}
 		return list;
-		/*Properties props = new Properties();
+		Properties props = new Properties();
 		
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 		Annotation annotation = new Annotation("This is an easy sentence. And this is another.");
@@ -158,12 +165,12 @@ public final class TextProcessor {
 		for(CoreMap sentence: sentences){
 			SemanticGraph graph = sentence.get(CollapsedDependenciesAnnotation.class);
 			graph.prettyPrint();
-		}*/
+		}
 		
 		
-	}
+	}*/
 	
-	public static void getDependencies2(){
+/*	public static void getDependencies2(){
 		LexicalizedParser lp = LexicalizedParser.loadModel(
 				"edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz",
 				"-maxLength", "80", "-retainTmpSubcategories");
@@ -176,5 +183,5 @@ public final class TextProcessor {
 		GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
 		Collection<TypedDependency> tdl = gs.typedDependenciesCollapsedTree();
 		System.out.println(tdl);
-	}
+	}*/
 }

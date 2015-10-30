@@ -209,7 +209,7 @@ public class ConceptExtractor {
 			List<String> np = getNounPhrasesFromText(text);
 			for(String nounp: np){
 				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
-				List<Result> result = queryFromString(TextProcessor.removeSW(nounp).toLowerCase());
+				List<Result> result = queryFromString(TextProcessor.removeStopWords(nounp).toLowerCase());
 				for(Result res: result){
 					for(Utterance uttr: res.getUtteranceList()){
 						for (PCM pcm: uttr.getPCMList()){
@@ -248,7 +248,8 @@ public class ConceptExtractor {
 			ResultSet rs = db.performQuery(sql);
 			if(rs!=null){
 				while(rs.next()){
-					if(api.getStatus(rs.getString("SCUI"))==1)
+					// Llamada a la API para comprobar estado actual del concepto
+					if(api.getStatus(rs.getString("SCUI"))==1) // Si esta activo, añadirlo a la lista de resultados
 						idlist.add(rs.getString("SCUI"));
 				}
 				rs.close();
