@@ -3,10 +3,15 @@ package nlp;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import coredataset.CoreDatasetServiceClient;
 import app.SnomedWebAPIClient;
 import db.DBConnector;
+import exceptions.ServiceNotAvailable;
 import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
 import gov.nih.nlm.nls.metamap.ConceptPair;
 import gov.nih.nlm.nls.metamap.Ev;
@@ -31,6 +36,7 @@ public class ConceptExtractor {
 	private MetaMapApi mmapi;
 	private String options;
 	private DBConnector db;
+	private static HashMap<String,Integer> index = new HashMap<>(); // scui,status
 
 	public ConceptExtractor() {
 		this.mmapi = new MetaMapApiImpl();
@@ -184,6 +190,7 @@ public class ConceptExtractor {
 		return resultList;
 	}
 
+	// Use Metamap parser to get the noun phrases of the sentence
 	private List<String> getNounPhrasesFromText(String text){
 		List<String> np = new ArrayList<String>();
 		try{
@@ -218,13 +225,16 @@ public class ConceptExtractor {
 								Mapping map = pcm.getMappingList().get(0);
 								for (Ev mapEv: map.getEvList()){
 									String sctid = "-";
-									if(!getSCTId(mapEv.getConceptId()).isEmpty())
-										sctid=getSCTId(mapEv.getConceptId()).get(0);
+									List<String> scuil = getProperSCUI(mapEv.getConceptId());
+									if(!scuil.isEmpty())
+										sctid=scuil.get(0);
+									/*if(!getSCTId(mapEv.getConceptId()).isEmpty())
+										sctid=getSCTId(mapEv.getConceptId()).get(0);*/
 									Concept concept = new Concept(mapEv.getConceptId(),
 											sctid,
 											mapEv.getConceptName(),
 											mapEv.getPreferredName(),
-											nounp /*pcm.getPhrase().getPhraseText()*/,
+											nounp, /*pcm.getPhrase().getPhraseText()*/
 											mapEv.getSemanticTypes());
 									concepts.add(concept);
 								}
@@ -240,7 +250,7 @@ public class ConceptExtractor {
 		return concepts;
 	}
 
-	private List<String> getSCTId(String id){
+	public List<String> getSCTId(String id){
 		SnomedWebAPIClient api = new SnomedWebAPIClient();
 		List<String> idlist = new ArrayList<String>();
 		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US' GROUP BY SCUI";
@@ -248,8 +258,12 @@ public class ConceptExtractor {
 			ResultSet rs = db.performQuery(sql);
 			if(rs!=null){
 				while(rs.next()){
-					// Llamada a la API para comprobar estado actual del concepto
-					if(api.getStatus(rs.getString("SCUI"))==1) // Si esta activo, añadirlo a la lista de resultados
+					String scui = rs.getString("SCUI");
+					if(!index.containsKey(scui)){
+						// API call to check actual status of the concept
+						index.put(scui, api.getStatus(scui));
+					}
+					if(index.get(scui)==1) // If it is active, add it to the result list
 						idlist.add(rs.getString("SCUI"));
 				}
 				rs.close();
@@ -258,5 +272,40 @@ public class ConceptExtractor {
 			e.printStackTrace();
 		}
 		return idlist;
+	}
+	
+	public List<String> getProperSCUI(String cui){
+		CoreDatasetServiceClient normalizer;
+		List<String> idlist = getSCTId(cui);
+		try {
+			normalizer = new CoreDatasetServiceClient();
+			if(idlist.size()>2){
+				List<String> aux = new CopyOnWriteArrayList<>(idlist);
+				idlist.clear();
+				Iterator<String> it = aux.iterator();
+				while(it.hasNext()){
+					String id = it.next();
+					if(normalizer.getRootConcept(id).equals("Unknown"))
+						aux.remove(id);
+				}
+				if(idlist.size()>2){
+					idlist.addAll(normalizer.getBestMatches(aux));
+				}
+				else
+					idlist.addAll(aux);
+			}
+		} catch (ServiceNotAvailable e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return idlist;
+	}
+	
+	public void initDBConnector(){
+		this.db = new DBConnector(DB_URL, USER, PASS);
+	}
+	
+	public void endDBConnector(){
+		this.db.endConnector();
 	}
 }

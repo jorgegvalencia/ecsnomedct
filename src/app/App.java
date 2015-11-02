@@ -18,12 +18,17 @@ import model.Concept;
 import model.EligibilityCriteria;
 
 public class App {
+	// test trials
 	private static final String[] TRIALS = {"NCT01358877","NCT00148876","NCT02102490","NCT01633060","NCT01700257"};
 	
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
 			//normalizationTest();
-			metamapTest();
+		for(String trial: TRIALS){
+			metamapTest(trial);
+			System.out.println("\n");
+		}
+		//statusDBcodes("C0006826");
 			//statusTest();
 			//clusterConcepts();
 		long endTime = System.nanoTime();
@@ -42,16 +47,24 @@ public class App {
 		CoreDatasetServiceClient normalize;
 		try {
 			normalize = new CoreDatasetServiceClient();
-			System.out.println(normalize.getNormalFormAsString(sctid,true));
+			System.out.println(normalize.getNormalFormAsString(sctid,false));
 		} catch (ServiceNotAvailable e) {
 			System.exit(1);
 		}
 	}
+	
+	public static List<String> activeDBcodes(String id){
+		ConceptExtractor ce = new ConceptExtractor();
+		ce.initDBConnector();
+		List<String> idlist = ce.getSCTId(id);
+		ce.endDBConnector();
+		return idlist;
+	}
 
 	// Test del procesamiento de un ensayo clínico con la API metamap + normalización 
-	public static void metamapTest(){
+	public static void metamapTest(String nctid){
 		try {
-			String nctid = TRIALS[0];
+			//String nctid = TRIALS[0];
 			CTManager ctm = new CTManager();
 			ConceptExtractor ce = new ConceptExtractor();
 			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
@@ -61,7 +74,7 @@ public class App {
 			for(EligibilityCriteria ec: ecList){
 				if(!ec.getConcepts().isEmpty()){
 					for(Concept c: ec.getConcepts()){
-						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),true));
+						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),false));
 						c.print2();
 					}
 				}
