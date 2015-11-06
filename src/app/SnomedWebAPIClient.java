@@ -6,11 +6,15 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+
+import db.DBConnector;
 
 public class SnomedWebAPIClient {
 
@@ -62,5 +66,43 @@ public class SnomedWebAPIClient {
 			e.printStackTrace();
 		}
 		return status;
+	}
+	
+	public int getStatusFromDB(String sctid){
+		DBConnector db = new DBConnector("jdbc:mysql://localhost/snomedct", "root", "root");
+		String sql = "SELECT DISTINCT active FROM curr_concept_s WHERE id='"+sctid+"'";
+		int status = 0;
+		ResultSet rs = db.performQuery(sql);
+		if(rs != null){
+			try {
+				while(rs.next())
+					status = Integer.parseInt(rs.getString("active"));
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		db.endConnector();
+		return status;
+	}
+	
+	public String getFSN(String sctid){
+		DBConnector db = new DBConnector("jdbc:mysql://localhost/snomedct", "root", "root");
+		String result = null;
+		String sql ="SELECT term FROM curr_concept_s, curr_description_s WHERE curr_concept_s.id = curr_description_s.conceptid "
+				+ "AND curr_concept_s.id='"+sctid+"'"
+				+ "AND curr_description_s.term LIKE '%(%)'"
+				+ "AND curr_description_s.term NOT LIKE '%(qualifier value)'"
+				+ "AND curr_concept_s.active='1'"
+				+ "AND curr_description_s.active='1';";
+		ResultSet rs = db.performQuery(sql);
+		try {
+			while(rs.next())
+				result = rs.getString("term");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }

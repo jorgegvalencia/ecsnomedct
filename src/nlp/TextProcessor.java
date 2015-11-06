@@ -40,10 +40,10 @@ public final class TextProcessor {
 
 	public static String ProcessEligibilityCriteria(String text){
 		String refinedText;
-		// Elimina los guiones de puntos de contenido
-		refinedText = text.replaceAll("-\\s+(?=[A-Z])", "");
 		// Elimina los puntos de contenido numericos
-		//refinedText = refinedText.replaceAll("([0-9]+\\.)+\\s", "");
+		refinedText = text.replaceAll("([0-9]+\\.(?=\\s))+\\s", " - ");
+		// Elimina los guiones de puntos de contenido
+		refinedText = refinedText.replaceAll("-\\s+(?=[A-Z])", "");
 		// A las oraciones sin punto final y con salto de linea se le anade un punto final
 		refinedText = refinedText.replaceAll("(?<=.)\n\\s+(?=[A-Z]{1}[a-z])", ". ");
 		refinedText = refinedText.replaceAll("\\.{2}", ". ");

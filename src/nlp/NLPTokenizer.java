@@ -17,6 +17,9 @@ public class NLPTokenizer {
 	public NLPTokenizer(String model){
 		model_route = model;
 	}
+	public NLPTokenizer(){
+		model_route = "resources/en-token.bin";
+	}
 	public List<String> tokenize(String sentence){
 		InputStream modelIn = null;
 		List<String> tokens = new ArrayList<String>();

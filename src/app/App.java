@@ -3,16 +3,23 @@ package app;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import coredataset.CoreDatasetServiceClient;
 import exceptions.ServiceNotAvailable;
 import nlp.ConceptExtractor;
+import nlp.NLPTokenizer;
+import nlp.TextProcessor;
 import model.ClinicalTrial;
 import model.Concept;
 import model.EligibilityCriteria;
@@ -20,21 +27,23 @@ import model.EligibilityCriteria;
 public class App {
 	// test trials
 	private static final String[] TRIALS = {"NCT01358877","NCT00148876","NCT02102490","NCT01633060","NCT01700257"};
-	
+
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
-			//normalizationTest();
+		//normalizationTest();
+		//abbrevAnalisys(500);
 		for(String trial: TRIALS){
 			metamapTest(trial);
 			System.out.println("\n");
 		}
+		//ConceptExtractor.endServers();
 		//statusDBcodes("C0006826");
-			//statusTest();
-			//clusterConcepts();
+		//statusTest();
+		//clusterConcepts();
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
-	
+
 	// Test de la API SNOMEDCT https://rxnav.nlm.nih.gov/SnomedCTAPI.html
 	public static void statusTest(){
 		SnomedWebAPIClient api = new SnomedWebAPIClient();
@@ -52,40 +61,46 @@ public class App {
 			System.exit(1);
 		}
 	}
-	
+
 	public static List<String> activeDBcodes(String id){
 		ConceptExtractor ce = new ConceptExtractor();
 		ce.initDBConnector();
-		List<String> idlist = ce.getSCTId(id);
+		List<String> idlist = ce.getSCUI(id);
 		ce.endDBConnector();
 		return idlist;
 	}
 
 	// Test del procesamiento de un ensayo clínico con la API metamap + normalización 
 	public static void metamapTest(String nctid){
-		try {
+	//	try {
 			//String nctid = TRIALS[0];
 			CTManager ctm = new CTManager();
 			ConceptExtractor ce = new ConceptExtractor();
-			CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
+			//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
+			ct.print();
 			String criteria = ct.getCriteria();
 			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
 			for(EligibilityCriteria ec: ecList){
 				if(!ec.getConcepts().isEmpty()){
-					for(Concept c: ec.getConcepts()){
-						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),false));
+					ec.print();
+					/*for(Concept c: ec.getConcepts()){
+						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),true));
 						c.print2();
-					}
+					}*/
 				}
 			}
-		} catch (ServiceNotAvailable e) {
-			System.exit(1);
-		}
+/*		} catch (ServiceNotAvailable e) {
+			System.exit(1);*/
+/*		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
 
 	// Método que crea un CSV con los conceptos de un conjunto de ensayos clínicos
 	public static void clusterConcepts(){
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 		CTManager ctm = new CTManager();
 		ConceptExtractor ce = new ConceptExtractor();
 		Map<String,Integer> map = new HashMap<String,Integer>();
@@ -99,6 +114,8 @@ public class App {
 		for(File f: files){
 			if(f.getName().contains("NCT")){
 				j++;
+				System.out.print(dateFormat.format(new Date()));
+				System.out.print(" ["+j+"] ");
 				long startTime = System.nanoTime();
 				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
 				String criteria = ct.getCriteria();
@@ -107,18 +124,17 @@ public class App {
 					conceptList.addAll(ec.getConcepts());
 				}
 				long endTime = System.nanoTime();
-				System.out.print("["+j+"] ");
 				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
 			}
 		}
 		System.out.println("Building map...");
 		for(Concept concept: conceptList){
-			if(map.containsKey(concept.getName()))
-				map.put(concept.getName(), map.get(concept.getName())+1);
+			if(map.containsKey(concept.getPreferedName()))
+				map.put(concept.getPreferedName(), map.get(concept.getPreferedName())+1);
 			else
-				map.put(concept.getName(), 1);
-			semmap.put(concept.getName(),concept.semTypesString());
-			codesmap.put(concept.getName(), new Tuple<String,String>(concept.getCui(),concept.getSctid()));
+				map.put(concept.getPreferedName(), 1);
+			semmap.put(concept.getPreferedName(),concept.semTypesString());
+			codesmap.put(concept.getPreferedName(), new Tuple<String,String>(concept.getCui(),concept.getSctid()));
 			nConcepts++;
 		}
 		System.out.println("Sorting map...");
@@ -133,10 +149,10 @@ public class App {
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
 		System.out.println("Top 50:");
-		System.out.format("%15s | %15s | %30s | %15s | %5s | %55s \n","CUI","SCTID","Concept","Appearances","Frecuency","Semantic Type");
+		System.out.format("%15s | %-15s | %80s | %15s | %5s | %55s \n","CUI","SCTID","Concept","Appearances","Frecuency","Semantic Type");
 		for(int i = 0; i < 50 && i < entries.size(); i++){
 			double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/(double)nConcepts);
-			System.out.format("%15s | %15s | %-30s | %-15s | %-5.4f %%  | %55s \n",
+			System.out.format("%15s | %-15s | %-80s | %-15s | %-5.4f %%  | %55s \n",
 					codesmap.get(entries.get(entries.size() - i - 1).getKey()).item1,
 					codesmap.get(entries.get(entries.size() - i - 1).getKey()).item2,
 					entries.get(entries.size() - i - 1).getKey(),
@@ -145,17 +161,18 @@ public class App {
 					semmap.get(entries.get(entries.size() - i - 1).getKey()));
 		}
 		try{
-			FileWriter writer = new FileWriter("frecuencies.csv");
+			dateFormat = new SimpleDateFormat("dd_MMM-HH_mm_ss");
+			FileWriter writer = new FileWriter("frecuencies"+dateFormat.format(new Date())+".csv");
 			writer.append("CUI;SCTID;Concept;Appearances;Frecuency;SemanticType\n");
 			for(int i = 0; i < entries.size(); i++){
-				double frecuency = ((double)entries.get(i).getValue()/nConcepts);
+				double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/nConcepts);
 				writer.append(String.format("%s;%s;%s;%s;%.4f;%s\n",
 						codesmap.get(entries.get(entries.size() - i - 1).getKey()).item1,
 						codesmap.get(entries.get(entries.size() - i - 1).getKey()).item2,
-						entries.get(i).getKey(),
-						entries.get(i).getValue().toString(),
+						entries.get(entries.size() - i - 1).getKey(),
+						entries.get(entries.size() - i - 1).getValue().toString(),
 						frecuency,
-						semmap.get(entries.get(i).getKey())));
+						semmap.get(entries.get(entries.size() - i - 1).getKey())));
 			}
 			writer.flush();
 			writer.close();
@@ -163,6 +180,54 @@ public class App {
 		catch(IOException e)
 		{
 			e.printStackTrace();
+		}
+	}
+
+	public static void abbrevAnalisys(int max){
+		NLPTokenizer tokenizer = new NLPTokenizer();
+		CTManager ct = new CTManager();
+		ConceptExtractor ce = new ConceptExtractor();
+		HashMap<String,Integer> map = new HashMap<>();
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		Pattern p = Pattern.compile("([A-Z]+[A-Z0-9\\-]+)+");
+		String path="resources/trials/";
+		File[] files = new File(path).listFiles();
+		int ntrials = 0;
+		for(File f: files){
+			if(ntrials < max)
+				if(f.getName().contains("NCT")){
+					ntrials++;
+					System.out.print(dateFormat.format(new Date())+" ["+ntrials+"] ");
+					long startTime = System.nanoTime();
+					ClinicalTrial t = ct.buildClinicalTrial(f.getName().replace(".xml", ""));
+					String criteria  = TextProcessor.ProcessEligibilityCriteria(t.getCriteria());
+					for(String sentence: ce.getUtterancesFromText(criteria)){
+						for(String token: tokenizer.tokenize(sentence)){
+							Matcher m = p.matcher(token);
+							if(m.find())
+								if(map.containsKey(m.group(0)))
+									map.put(m.group(0), map.get(m.group(0))+1);
+								else
+									map.put(m.group(0), 1);
+						}
+					}
+					long endTime = System.nanoTime();
+					System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
+				}
+
+		}
+		System.out.println("Sorting map...");
+		ArrayList<Map.Entry<String, Integer>> entries = new ArrayList<>(map.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<String, Integer>>() {
+			@Override
+			public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
+				return a.getValue().compareTo(b.getValue());
+			}
+		});
+		for(int i = 0; i < 50 && i < entries.size(); i++){
+			System.out.format("%-80s | %-15s \n",
+					entries.get(entries.size() - i - 1).getKey(),
+					+entries.get(entries.size() - i - 1).getValue());
 		}
 	}
 

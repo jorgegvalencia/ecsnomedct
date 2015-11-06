@@ -40,6 +40,7 @@ public class EligibilityCriteria {
 		for(Concept concept: concepts){
 			concept.print();
 		}
+		System.out.println("+----------------------------------------------------------------------------------------------------------------------------------+");
 	}
 	
 }

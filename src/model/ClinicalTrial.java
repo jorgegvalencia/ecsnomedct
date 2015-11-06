@@ -26,15 +26,15 @@ public class ClinicalTrial {
 				"%17s:\t%s\n" +
 				"%17s:\t%s\n" +
 				"%17s:\t%s\n" +
-				"%17s:\t%s\n" +
+				//"%17s:\t%s\n" +
 				"%17s:\t%s\n",
 				"CT Title",title,
 				"NCT ID",nctId,
 				"URL",url,
 				"Start date",startDate,
 				"Study type",studyType,
-				"Brief Summary",briefSummary,
-				"Criteria", criteria
+				"Brief Summary",briefSummary
+				//"Criteria", criteria
 				);
 	}
 

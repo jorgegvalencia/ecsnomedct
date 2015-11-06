@@ -101,6 +101,10 @@ public class CoreDatasetServiceClient{
 		}
 		return result;
 	}
+	
+	public String getFSN(String scui){
+		return port.cd2CDMNEW(scui).getCode().getValue().getLabel().getValue();
+	}
 
 	public String getRootConcept(String term){
 		return port.getRootConcept(term);

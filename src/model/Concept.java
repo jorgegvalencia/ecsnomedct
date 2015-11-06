@@ -37,6 +37,10 @@ public class Concept {
 		return preferedName;
 	}
 
+	public void setPreferedName(String preferedName) {
+		this.preferedName = preferedName;
+	}
+
 	public String getPhrase() {
 		return phrase;
 	}
@@ -65,7 +69,7 @@ public class Concept {
 	}
 	
 	public void print(){
-		System.out.format("%8s|%9s|%-30s|%50s\t%s\n",
+		System.out.format("%8s|%9s|%-60s|%50s\t%s\n",
 				cui,
 				sctid,
 				preferedName,
@@ -74,7 +78,7 @@ public class Concept {
 	}
 	
 	public void print2(){
-		System.out.format("%8s|%9s|%-30s|%s\n",
+		System.out.format("%8s|%9s|%-60s|%s\n",
 				cui,
 				sctid,
 				preferedName,
