@@ -1,14 +1,23 @@
 package model;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
+import db.DBConnector;
+
 public class Concept {
+	private static final String NORM = "jdbc:mysql://localhost/norm";
+	private static final String USER = "root";
+	private static final String PASS = "root";
+	
 	private String cui;
 	private String sctid;
 	private String name;
 	private String preferedName;
 	private String phrase;
 	private List<String> semtypes;	
+	private String hierarchy;
 	private String normalForm;
 
 	public Concept(String cui, String sctid, String name, String preferedName, String phrase, List<String> semtypes) {
@@ -19,6 +28,41 @@ public class Concept {
 		this.phrase = phrase;
 		this.semtypes = semtypes;
 		this.normalForm="-";
+		this.hierarchy="-";
+	}
+	
+	public void persistConcept(String ct, int auto_id){
+		DBConnector db = new DBConnector(NORM,USER,PASS);
+		String sql = "INSERT INTO concept (sctid,cui,name,semantic_type) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE"
+				+ " sctid=VALUES(sctid), cui=VALUES(cui), name=VALUES(name), semantic_type=VALUES(semantic_type)";
+		PreparedStatement ps = db.prepareInsert(sql);
+		if(ps != null){
+			try {
+				ps.setString(1, sctid);
+				ps.setString(2, cui);
+				ps.setString(3, preferedName);
+				ps.setString(4, hierarchy);
+				ps.executeUpdate();
+				ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		sql = "INSERT IGNORE INTO ec_concepts (eligibility_criteria_id,clinical_trial_id,concept_sctid) VALUES(?,?,?)";
+		//"ON DUPLICATE KEY UPDATE eligibility_criteria_id=VALUES(eligibility_criteria_id), clinical_trial_id=VALUES(clinical_trial_id), concept_sctid=VALUES(concept_sctid)";
+		ps = db.prepareInsert(sql);
+		if(ps != null){
+			try {
+				ps.setInt(1, auto_id);
+				ps.setString(2, ct);
+				ps.setString(3, sctid);
+				ps.executeUpdate();
+				ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		db.endConnector();
 	}
 
 	public String getCui() {
@@ -45,6 +89,10 @@ public class Concept {
 		return phrase;
 	}
 
+	public void setPhrase(String phrase) {
+		this.phrase = phrase;
+	}
+
 	public List<String> getSemtypes() {
 		return semtypes;
 	}
@@ -68,12 +116,23 @@ public class Concept {
 		this.normalForm = normalForm;
 	}
 	
+	public String getHierarchy() {
+		return hierarchy;
+	}
+
+	public void setHierarchy(String hierarchy) {
+		this.hierarchy = hierarchy;
+	}
+
 	public void print(){
-		System.out.format("%8s|%9s|%-60s|%50s\t%s\n",
+		System.out.format("%8s|%9s|%-60s"
+				//+ "|%50s|%50s"
+				+"\t%s\n",
 				cui,
 				sctid,
 				preferedName,
-				"["+semTypesString()+"]",
+				//"["+semTypesString()+"]",
+				//hierarchy,
 				"Phrase: "+phrase);
 	}
 	

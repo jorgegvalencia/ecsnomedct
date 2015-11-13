@@ -1,8 +1,16 @@
 package model;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
+import db.DBConnector;
+
 public class EligibilityCriteria {
+	private static final String NORM = "jdbc:mysql://localhost/norm";
+	private static final String USER = "root";
+	private static final String PASS = "root";
+	
 	private String utterance;
 	private List<Concept> concepts;
 	private int criteriaType;
@@ -11,6 +19,28 @@ public class EligibilityCriteria {
 		this.utterance = utterance;
 		this.concepts = concepts;
 		this.criteriaType = criteriaType;
+	}
+	
+	public void persistEligibilityCriteria(String nctid, int n){
+		DBConnector db = new DBConnector(NORM,USER,PASS);
+		String sql2 = "INSERT INTO eligibility_criteria (id, clinical_trial_id, inc_exc, utterance) VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE"
+				+ " inc_exc=VALUES(inc_exc), utterance=VALUES(utterance)";
+		PreparedStatement ps = db.prepareInsert(sql2);
+		if(ps != null){
+			try {
+				ps.setInt(1, n);
+				ps.setString(2, nctid);
+				ps.setInt(3, criteriaType);
+				ps.setString(4, utterance);
+				ps.executeUpdate();
+				ps.close();
+				db.endConnector();
+				for(Concept c: concepts)
+					c.persistConcept(nctid,n);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public String getUtterance() {

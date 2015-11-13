@@ -1,8 +1,16 @@
 package model;
 
 import java.net.URL;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import db.DBConnector;
 
 public class ClinicalTrial {
+	private static final String NORM = "jdbc:mysql://localhost/norm";
+	private static final String USER = "root";
+	private static final String PASS = "root";
+	
 	private URL url;
 	private String nctId;
 	private String title;
@@ -17,6 +25,25 @@ public class ClinicalTrial {
 	private String maximumAge;
 	
 	public ClinicalTrial() {
+	}
+	
+	public void persistClinicalTrial(){
+		DBConnector db = new DBConnector(NORM,USER,PASS);
+		String sql = "INSERT INTO clinical_trial (id,title,studytype) VALUES (?,?,?) ON DUPLICATE KEY UPDATE"
+				+ " title=VALUES(title), studytype=VALUES(studytype)";
+		PreparedStatement ps = db.prepareInsert(sql);
+		if(ps != null){
+			try {
+				ps.setString(1, nctId);
+				ps.setString(2, title);
+				ps.setString(3, studyType);
+				ps.executeUpdate();
+				ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		db.endConnector();
 	}
 	
 	public void print(){

@@ -1,5 +1,8 @@
 /bin/
-/resources/
+/resources/trials
+/resources/temp
+/resources/*.bin
+/resources/*.bak
 .classpath
 .project
 frecuencies.csv

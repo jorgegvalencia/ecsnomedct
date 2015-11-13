@@ -1,8 +1,12 @@
 package app;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,20 +30,32 @@ import model.EligibilityCriteria;
 
 public class App {
 	// test trials
-	private static final String[] TRIALS = {"NCT01358877","NCT00148876","NCT02102490","NCT01633060","NCT01700257"};
+	private static final String[] TRIALS = {"NCT02102490","NCT01358877","NCT00148876","NCT01633060","NCT01700257"};
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
 		//normalizationTest();
 		//abbrevAnalisys(500);
+		/*try {
+			//PrintStream stdout = System.out;
+			System.setOut(new PrintStream(new FileOutputStream("C:\\Users\\Jorge\\Documents\\GitHub\\ecsnomedct\\output.txt")));
+			//System.setOut(stdout);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		*/
+		/*
 		for(String trial: TRIALS){
 			metamapTest(trial);
 			System.out.println("\n");
 		}
+		*/
+		//persistTEST();
+		//clusterClinicalTrials();
 		//ConceptExtractor.endServers();
 		//statusDBcodes("C0006826");
 		//statusTest();
-		//clusterConcepts();
+		clusterConcepts(10000);
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
@@ -62,14 +78,6 @@ public class App {
 		}
 	}
 
-	public static List<String> activeDBcodes(String id){
-		ConceptExtractor ce = new ConceptExtractor();
-		ce.initDBConnector();
-		List<String> idlist = ce.getSCUI(id);
-		ce.endDBConnector();
-		return idlist;
-	}
-
 	// Test del procesamiento de un ensayo clínico con la API metamap + normalización 
 	public static void metamapTest(String nctid){
 	//	try {
@@ -78,10 +86,13 @@ public class App {
 			ConceptExtractor ce = new ConceptExtractor();
 			//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
+			ct.persistClinicalTrial();
 			ct.print();
 			String criteria = ct.getCriteria();
 			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+			//int index=1;
 			for(EligibilityCriteria ec: ecList){
+				//ec.persistEligibilityCriteria(ct.getNctId(), index);
 				if(!ec.getConcepts().isEmpty()){
 					ec.print();
 					/*for(Concept c: ec.getConcepts()){
@@ -89,6 +100,7 @@ public class App {
 						c.print2();
 					}*/
 				}
+				//index++;
 			}
 /*		} catch (ServiceNotAvailable e) {
 			System.exit(1);*/
@@ -97,19 +109,39 @@ public class App {
 			e.printStackTrace();
 		}*/
 	}
-
-	// Método que crea un CSV con los conceptos de un conjunto de ensayos clínicos
-	public static void clusterConcepts(){
+	
+	public static void persistTEST(){
+		CTManager ctm = new CTManager();
+		ClinicalTrial ct = ctm.buildClinicalTrial("NCT02102490");
+		ct.persistClinicalTrial();
+		ConceptExtractor ce = new ConceptExtractor();
+		String criteria = ct.getCriteria();
+		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+		int i=1;
+		for(EligibilityCriteria ec: ecList){
+			ec.persistEligibilityCriteria(ct.getNctId(), i);
+			/*for(Concept c: ec.getConcepts()){
+				c.persistConcept(ct.getNctId(), i);
+				i++;	
+			}*/
+			i++;
+		}
+	}
+	
+	public static void clusterClinicalTrials(){
+		PrintStream stdout = System.out;
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		DateFormat dateFormat2 = new SimpleDateFormat("dd_MMM-HH_mm_ss");
+		String date = dateFormat2.format(new Date());
 		CTManager ctm = new CTManager();
 		ConceptExtractor ce = new ConceptExtractor();
-		Map<String,Integer> map = new HashMap<String,Integer>();
-		Map<String,String> semmap = new HashMap<>();
-		Map<String,Tuple<String,String>> codesmap = new HashMap<>();
-		int nConcepts = 0;
-		List<Concept> conceptList = new ArrayList<Concept>();
 		String path="resources/trials/";
 		File[] files = new File(path).listFiles();
+		System.out.print("Processing trials... estimated time: ");
+		if(files.length*15/60 > 60)
+			System.out.print(files.length*15/3600 + " h\n");
+		else
+			System.out.print(files.length*15/60 + " min\n");
 		int j=0;
 		for(File f: files){
 			if(f.getName().contains("NCT")){
@@ -120,20 +152,96 @@ public class App {
 				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
 				String criteria = ct.getCriteria();
 				List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+				try {
+					System.setOut(new PrintStream(new FileOutputStream("C:\\Users\\Jorge\\Documents\\GitHub\\ecsnomedct\\output"+date+".txt",true)));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
 				for(EligibilityCriteria ec: ecList){
+					ec.print();
+				}
+				System.setOut(stdout);
+				long endTime = System.nanoTime();
+				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
+				if((endTime - startTime)/Math.pow(10, 9) < 1.5){
+					try {
+						Runtime.getRuntime().exec("taskkill /F /IM mmserver14.BINARY.X86-win32-nt-4");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					System.out.println("Restarting servers");
+					ce.initServers();
+				}
+			}
+		}
+	}
+
+	// Método que crea un CSV con los conceptos de un conjunto de ensayos clínicos
+	public static void clusterConcepts(int limit){
+		// Tools
+		CTManager ctm = new CTManager();
+		ConceptExtractor ce = new ConceptExtractor();
+		
+		// Data structures
+		Map<String,Integer> map = new HashMap<String,Integer>();
+		Map<String,String> semmap = new HashMap<>();
+		Map<String,Tuple<String,String>> codesmap = new HashMap<>();
+		List<Concept> conceptList = new ArrayList<Concept>();
+		
+		int nConcepts = 0;
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		String path="resources/trials/";
+		File[] files = new File(path).listFiles();
+		
+		// Processing time estimation
+		System.out.print("Processing trials... estimated time: ");
+		if(((files.length < limit) ? files.length : limit)*18/60 > 60)
+			System.out.print(((files.length < limit) ? files.length : limit)*18/3600 + " h\n");
+		else
+			System.out.print(((files.length < limit) ? files.length : limit)*18/60 + " min\n");
+		
+		// Processing
+		int j=0;
+		for(File f: files){
+			if(j>=limit)
+				break;
+			if(f.getName().contains("NCT")){
+				j++;
+				System.out.print(dateFormat.format(new Date()));
+				System.out.print(" ["+j+"] ");
+				long startTime = System.nanoTime();
+				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
+				ct.persistClinicalTrial();
+				String criteria = ct.getCriteria();
+				List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+				int index=1;
+				for(EligibilityCriteria ec: ecList){
+					ec.persistEligibilityCriteria(ct.getNctId(), index);
 					conceptList.addAll(ec.getConcepts());
+					index++;
 				}
 				long endTime = System.nanoTime();
 				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
+				if((endTime - startTime)/Math.pow(10, 9) < 1.5){
+					try {
+						Runtime.getRuntime().exec("taskkill /F /IM mmserver14.BINARY.X86-win32-nt-4");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					System.out.println("Restarting servers");
+					ce.initServers();
+				}
 			}
 		}
+		
+		// Results file
 		System.out.println("Building map...");
 		for(Concept concept: conceptList){
 			if(map.containsKey(concept.getPreferedName()))
 				map.put(concept.getPreferedName(), map.get(concept.getPreferedName())+1);
 			else
 				map.put(concept.getPreferedName(), 1);
-			semmap.put(concept.getPreferedName(),concept.semTypesString());
+			semmap.put(concept.getPreferedName(),concept.getHierarchy());
 			codesmap.put(concept.getPreferedName(), new Tuple<String,String>(concept.getCui(),concept.getSctid()));
 			nConcepts++;
 		}
@@ -148,9 +256,9 @@ public class App {
 		System.out.println("Total trials: "+j);
 		System.out.println("Total concepts: "+nConcepts);
 		System.out.println("Total distinct concepts: "+entries.size());
-		System.out.println("Top 50:");
-		System.out.format("%15s | %-15s | %80s | %15s | %5s | %55s \n","CUI","SCTID","Concept","Appearances","Frecuency","Semantic Type");
-		for(int i = 0; i < 50 && i < entries.size(); i++){
+		System.out.println("Top 100:");
+		System.out.format("%15s | %-15s | %80s | %15s | %5s | %55s \n","CUI","SCTID","Concept","Appearances","Frecuency","Hierarchy");
+		for(int i = 0; i < 100 && i < entries.size(); i++){
 			double frecuency = ((double)entries.get(entries.size() - i - 1).getValue()/(double)nConcepts);
 			System.out.format("%15s | %-15s | %-80s | %-15s | %-5.4f %%  | %55s \n",
 					codesmap.get(entries.get(entries.size() - i - 1).getKey()).item1,
@@ -231,6 +339,14 @@ public class App {
 		}
 	}
 
+	/*public static List<String> activeDBcodes(String id){
+		ConceptExtractor ce = new ConceptExtractor();
+		ce.initDBConnector();
+		List<String> idlist = ce.getSCUI(id);
+		ce.endDBConnector();
+		return idlist;
+	}
+*/
 	/*public static void clusterDependencies(){
 		CTManager ctm = new CTManager();
 		Map<String,Integer> patternmap = new HashMap<String,Integer>();

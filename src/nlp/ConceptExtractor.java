@@ -1,14 +1,25 @@
 package nlp;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import coredataset.CoreDatasetServiceClient;
 import app.SnomedWebAPIClient;
@@ -31,73 +42,104 @@ import model.EligibilityCriteria;
 public class ConceptExtractor {
 	// JDBC driver name and database URL
 	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	private static final String DB_URL = "jdbc:mysql://kandel.dia.fi.upm.es/metathesaurus";
+	private static final String METATHESAURUS = "jdbc:mysql://kandel.dia.fi.upm.es/metathesaurus";
+	private static final String NORM = "jdbc:mysql://localhost/norm";
 	//  Database credentials
 	private static final String USER = "umls";
 	private static final String PASS = "terminology_service";
-	private static final String MMSERVER14 = "C:\\Users\\Jorge\\public_mm\\bin\\mmserver14.bat";
+	private static final String MMSERVER14 = "C:\\Users\\Jorge\\public_mm\\bin\\mmserver14.bat"; // -UDA C:\\Users\\Jorge\\UDAfile
 	private static final String SKRMEDPOSTCTL = "C:\\Users\\Jorge\\public_mm\\bin\\skrmedpostctl_start.bat";
 	private static final String SKRMEDPOSTCTL_STOP = "C:\\Users\\Jorge\\public_mm\\bin\\skrmedpostctl_stop.bat";
 	// Index for status of concepts
 	private static HashMap<String,Integer> index = new HashMap<>(); // scui,status
+	private static HashSet<String> excluded = new HashSet<String>(); // CUI
 	// Runtime
 	private static Runtime rt = null;
 	private static Process mmserver = null;
 	private static Process tagger = null;
-	
-	private MetaMapApi mmapi;
-	private String options;
-	private DBConnector db;
+	/*
+	 * cell - Cell
+	 * fish - Fish
+	 * ftcn - Functional Concept
+	 * idcn - Idea or Concept
+	 * inpr - Intellectual Product
+	 * menp - Mental Process
+	 * mnob - Manufactured Object
+	 * podg - Patient or Disabled Group
+	 * qlco - Qualitative Concept
+	 * qnco - Quantitative Concept
+	 * spco - Spatial Concept
+	 * tmco - Temporal Concept
+	 */
+	private static MetaMapApi mmapi;
+	private static String options = "-Q 2 -i -k cell,fish,ftcn,idcn,inpr,menp,mnob,podg,qlco,qnco,spco,tmco -R SNOMEDCT_US";
 	private SnomedWebAPIClient api;
 
 	public ConceptExtractor() {
 		this.api = new SnomedWebAPIClient();
-		/*
-		 * cell - Cell
-		 * fish - Fish
-		 * ftcn - Functional Concept
-		 * idcn - Idea or Concept
-		 * inpr - Intellectual Product
-		 * menp - Mental Process
-		 * mnob - Manufactured Object
-		 * podg - Patient or Disabled Group
-		 * qlco - Qualitative Concept
-		 * qnco - Quantitative Concept
-		 * spco - Spatial Concept
-		 * tmco - Temporal Concept
-		 */
-		this.options = "-Q 2 -k cell,fish,ftcn,idcn,inpr,menp,mnob,podg,qlco,qnco,spco,tmco -R SNOMEDCT_US";
 		// Run servers if not initialized
 		initServers();
+		// Load index of excluded concepts
+		String path="resources/excluded_concepts";
+		try {
+			String line;
+			BufferedReader exclude = new BufferedReader(new FileReader(path));
+			while((line = exclude.readLine())!= null){
+				excluded.add(line);
+			}
+			exclude.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-	
-	public static void initServers(){
+
+	public void initServers(){
 		if(rt == null){
 			rt = Runtime.getRuntime();
 		}
-		if(tagger == null || !tagger.isAlive()){
-			try {
-				// Start tagger server first
-				tagger = rt.exec(SKRMEDPOSTCTL);
-				System.out.print("skrmedpostctl service running: ");
-				System.out.print(tagger.isAlive()+"\n"); // Tagger server status
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
-		if(mmserver == null || !mmserver.isAlive()){
-			try {
-				// Start the metamap server
-				mmserver = rt.exec(MMSERVER14);
-				System.out.print("mmserver14 service running: ");
-				System.out.print(mmserver.isAlive()+"\n"); // Metamap server status
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		//if(tagger == null || !tagger.isAlive()){ // || !tagger.isAlive()
+		try {
+			// Start tagger server first
+			tagger = rt.exec(SKRMEDPOSTCTL);
+			System.out.print("skrmedpostctl service running: ");
+			System.out.print(tagger.isAlive()+"\n"); // Tagger server status
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		//}
+		//if(mmserver == null || !mmserver.isAlive()){
+		try {
+			// Start the metamap server
+			mmserver = rt.exec(MMSERVER14);
+			System.out.print("mmserver14 service running: ");
+			System.out.print(mmserver.isAlive()+"\n"); // Metamap server status
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		//}
+		mmapi = new MetaMapApiImpl();
+		mmapi.setOptions(options);
 	}
-	
-	public static void endServers(){
+
+	/*	public void endServers(){
 		if(tagger != null && tagger.isAlive()){
 			tagger.destroyForcibly();
 			System.out.println("skrmedpostctl service ended.");
@@ -106,42 +148,19 @@ public class ConceptExtractor {
 			mmserver.destroyForcibly();
 			System.out.println("mmserver14 service ended.");
 		}
-	}
-	
-	public static boolean serversUp(){
+	}*/
+
+	/*	public boolean serversUp(){
 		boolean tag = tagger.isAlive();
 		boolean mm = mmserver.isAlive();
 			return tagger != null && mmserver !=null && tag && mm;
-	}
-	
-	private List<Result> queryFromString(String text) {
-		List<Result> resultList = new ArrayList<>();
-		try{
-			resultList = mmapi.processCitationsFromString(text);
-		} catch (Exception e){
-			try {
-				System.err.println("Restarting servers...");
-				Thread.sleep(5000);
-				initServers();
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				//e1.printStackTrace();
-			}
-		}
-		return resultList;
-	}
-
-	public List<String> getUtterancesFromText(String text){
-		// do needed process
-		List<String> utterances = TextProcessor.getSentencesFromText(text);
-		return utterances;
-	}
-
+	}*/
+	/**
+	 * @param text
+	 * @return Returns a set of EligibilityCriteria objects that contains a list of concepts contained in the elegibility criteria text.
+	 */
 	public List<EligibilityCriteria> getEligibilityCriteriaFromText(String text){
 		List<EligibilityCriteria> ecList = new ArrayList<EligibilityCriteria>();
-		db = new DBConnector(DB_URL, USER, PASS);
-		this.mmapi = new MetaMapApiImpl();
-		mmapi.setOptions(options);
 		int type = 0;
 		// Process raw criteria
 		String criteria = TextProcessor.ProcessEligibilityCriteria(text);
@@ -157,21 +176,40 @@ public class ConceptExtractor {
 			}
 			// get the concepts from the utterance
 			List<Concept> concepts = getConceptsFromText(utt);
+			// !! REVIEW CONCEPTS
+			List<Concept> rs = removeRedundancies(concepts);
 			// create EligibilityCriteria object
-			EligibilityCriteria ec = new EligibilityCriteria(utt, concepts, type);
+			EligibilityCriteria ec = new EligibilityCriteria(utt, rs, type);
 			ecList.add(ec);
 		}
-		db.endConnector();
-		this.mmapi = null;
+		ecList = filterConcepts(ecList);
 		return ecList;
 	}
 	
-	public List<EligibilityCriteria> filterConcepts(List<EligibilityCriteria> list){
-		List<EligibilityCriteria> filteredList = new ArrayList<>(list);
-		return filteredList;
+	public void persistEC(EligibilityCriteria ec){
+		DBConnector db = new DBConnector(NORM,USER,PASS);
+		//String sql = "INSERT INTO eligibilitycriteria (clinicaltrial_id,type,text) VALUES ("+ec.;
+		db.endConnector();
 	}
 
-	public void printAcronymsAbbrevs(Result result) {
+	private List<Result> queryFromString(String text) throws IOException{
+		List<Result> resultList = new ArrayList<>();
+		try{
+			resultList = mmapi.processCitationsFromString(text);
+		} catch (Exception e){
+			//try {
+			System.err.println("Restarting servers...");
+			//Thread.sleep(5000);
+			initServers();
+			//Thread.sleep(5000);
+			//} catch (InterruptedException e1) {
+			//e1.printStackTrace();
+			//}
+		}
+		return resultList;
+	}
+
+	private void printAcronymsAbbrevs(Result result) {
 		List<AcronymsAbbrevs> aaList;
 		try {
 			aaList = result.getAcronymsAbbrevs();
@@ -191,7 +229,7 @@ public class ConceptExtractor {
 		}
 	}
 
-	public void printNegations(Result result) {
+	private void printNegations(Result result) {
 		List<Negation> negList;
 		try {
 			negList = result.getNegations();
@@ -223,7 +261,7 @@ public class ConceptExtractor {
 		}
 	}
 
-	public void printUtterances(Result result) {
+	private void printUtterances(Result result) {
 		try {
 			for (Utterance utterance: result.getUtteranceList()) {
 				System.out.println("Utterance:");
@@ -274,63 +312,30 @@ public class ConceptExtractor {
 			e.printStackTrace();
 		}
 	}
-	
-	public List<String> getSCUI(String id){
-		List<String> idlist = new ArrayList<String>();
-		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US' GROUP BY SCUI";
-		try {
-			ResultSet rs = db.performQuery(sql);
-			if(rs!=null){
-				while(rs.next()){
-					String scui = rs.getString("SCUI");
-					if(!index.containsKey(scui)){
-						// API call to check actual status of the concept
-						index.put(scui, api.getStatusFromDB(scui));
-					}
-					if(index.get(scui)==1) // If it is active, add it to the result list
-						idlist.add(rs.getString("SCUI"));
-				}
-				rs.close();
+
+
+
+	/*	public void endServers(){
+			if(tagger != null && tagger.isAlive()){
+				tagger.destroyForcibly();
+				System.out.println("skrmedpostctl service ended.");
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return idlist;
-	}
-	
-	public List<String> getProperSCUI(String cui){
-		CoreDatasetServiceClient normalizer;
-		List<String> idlist = getSCUI(cui);
-		try {
-			normalizer = new CoreDatasetServiceClient();
-			if(idlist.size()>2){
-				List<String> aux = new CopyOnWriteArrayList<>(idlist);
-				idlist.clear();
-				Iterator<String> it = aux.iterator();
-				while(it.hasNext()){
-					String id = it.next();
-					if(normalizer.getRootConcept(id).equals("Unknown"))
-						aux.remove(id);
-				}
-				if(idlist.size()>2){
-					idlist.addAll(normalizer.getBestMatches(aux));
-				}
-				else
-					idlist.addAll(aux);
+			if(mmserver != null && mmserver.isAlive()){
+				mmserver.destroyForcibly();
+				System.out.println("mmserver14 service ended.");
 			}
-		} catch (ServiceNotAvailable e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-		return idlist;
-	}
-	
-	public void initDBConnector(){
-		this.db = new DBConnector(DB_URL, USER, PASS);
-	}
-	
-	public void endDBConnector(){
-		this.db.endConnector();
+		}*/
+
+	/*	public boolean serversUp(){
+			boolean tag = tagger.isAlive();
+			boolean mm = mmserver.isAlive();
+				return tagger != null && mmserver !=null && tag && mm;
+		}*/
+
+	public List<String> getUtterancesFromText(String text){
+		// do needed process
+		List<String> utterances = TextProcessor.getSentencesFromText(text);
+		return utterances;
 	}
 
 	// Use Metamap parser to get the noun phrases of the sentence
@@ -355,6 +360,7 @@ public class ConceptExtractor {
 
 	private List<Concept> getConceptsFromText(String text){
 		List<Concept> concepts = new ArrayList<Concept>();
+		Pattern p = Pattern.compile("\\([a-z\\s/]+\\)\\z");
 		try{
 			//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
 			List<String> np = getNounPhrasesFromText(text);
@@ -380,13 +386,19 @@ public class ConceptExtractor {
 									}
 									if((fsn = api.getFSN(sctid)) == null)
 										continue;
-										//fsn = mapEv.getPreferredName();
+									//fsn = mapEv.getPreferredName();
 									Concept concept = new Concept(mapEv.getConceptId(),
 											sctid,
 											mapEv.getConceptName(),
 											fsn,
 											nounp,
 											mapEv.getSemanticTypes());
+									Matcher m = p.matcher(fsn);
+									String hierarchy;
+									if(m.find()){
+										hierarchy = m.group(0).replaceAll("\\p{Punct}", "");
+										concept.setHierarchy(hierarchy);
+									}	
 									concepts.add(concept);
 								}
 							}	
@@ -395,6 +407,7 @@ public class ConceptExtractor {
 				}
 			}
 			// !!! REVIEW CONCEPTS
+			//rs = removeRedundancies(concepts);
 		}
 		catch (ServiceNotAvailable e){
 			System.exit(1);
@@ -404,55 +417,143 @@ public class ConceptExtractor {
 		}
 		return concepts;
 	}
-	
-	private List<Concept> removeRedundancies(List<Concept> concepts){
-		return null;
-	}
 
 	private List<Concept> getPatternConcepts(String nounp) {
 		List<Concept> result = new ArrayList<Concept>();
+		Concept c;
 		if(nounp.toLowerCase().contains("eastern cooperative oncology group")){
-			result.add(
-					new Concept("C1520224",
-							"423740007",
-							"ECOG performance status",
-							"Eastern Cooperative Oncology Group performance status (observable entity)",
-							nounp, new ArrayList<String>(Arrays.asList("clna"))));
+			c = new Concept("C1520224",
+					"423740007",
+					"ECOG performance status",
+					"Eastern Cooperative Oncology Group performance status (observable entity)",
+					nounp, new ArrayList<String>(Arrays.asList("clna")));
+			c.setHierarchy("observable entity");
+			result.add(c);
 		}
 		else if(nounp.toLowerCase().contains("informed consent")){
-			result.add(
-					new Concept("C0567423",
-							"182771004",
-							"Informed consent for procedure",
-							"Informed consent for procedure (procedure)",
-							nounp, new ArrayList<String>(Arrays.asList("topp"))));
+			c = new Concept("C0567423",
+					"182771004",
+					"Informed consent for procedure",
+					"Informed consent for procedure (procedure)",
+					nounp, new ArrayList<String>(Arrays.asList("topp")));
+			c.setHierarchy("procedure");
+			result.add(c);
 		}
-		else if(nounp.toLowerCase().contains("age")){
-			result.add(
-					new Concept("C0001779",
-							"424144002",
-							"Age",
-							"Current chronological age (observable entity)",
-							nounp, new ArrayList<String>(Arrays.asList("orga"))));
+		else if(nounp.toLowerCase().contains(" age ") || nounp.toLowerCase().contains(" age.")){
+			c = new Concept("C0001779",
+					"424144002",
+					"Age",
+					"Current chronological age (observable entity)",
+					nounp, new ArrayList<String>(Arrays.asList("orga")));
+			c.setHierarchy("observable entity");
+			result.add(c);
 		}
 		else if(nounp.toLowerCase().contains("contraception") 
 				|| nounp.toLowerCase().contains("contraception care")
 				|| nounp.toLowerCase().contains("avoid pregnancy")){
-			result.add(
-					new Concept("C1171186",
-							"389095005",
-							"Contraception care",
-							"Contraception care (regime/therapy)",
-							nounp, new ArrayList<String>(Arrays.asList("hlca"))));
+			c = new Concept("C1171186",
+					"389095005",
+					"Contraception care",
+					"Contraception care (regime/therapy)",
+					nounp, new ArrayList<String>(Arrays.asList("hlca")));
+			c.setHierarchy("regime/therapy");
+			result.add(c);
 		}
 		else if(nounp.toLowerCase().contains("breast feeding")){
-			result.add(
-					new Concept("C1623040",
-							"69840006",
-							"Normal breast feeding",
-							"Normal breast feeding (finding)",
-							nounp, new ArrayList<String>(Arrays.asList("fndg"))));
+			c = new Concept("C1623040",
+					"69840006",
+					"Normal breast feeding",
+					"Normal breast feeding (finding)",
+					nounp, new ArrayList<String>(Arrays.asList("fndg")));
+			c.setHierarchy("finding");
+			result.add(c);
 		}
 		return result;
+	}
+
+	private List<Concept> removeRedundancies(List<Concept> concepts){
+		List<Concept> result = new ArrayList<>();
+		Map<String,Concept> index = new HashMap<String,Concept>();
+		for(Concept c: concepts){
+			if(!index.containsKey(c.getCui())){
+				index.put(c.getCui(), c);
+			}
+			else{
+				String ph1 = c.getPhrase();
+				String ph2 = index.get(c.getCui()).getPhrase();
+				if(ph1.equals(ph2))
+					continue;
+				else
+					index.get(c.getCui()).setPhrase(ph1 + " + " + ph2);
+			}
+		}
+		result.addAll(index.values());
+		return result;
+	}
+
+	private List<EligibilityCriteria> filterConcepts(List<EligibilityCriteria> list){
+		List<EligibilityCriteria> filteredList = new ArrayList<>(list);
+		for(EligibilityCriteria ec: filteredList){
+			Iterator<Concept> it =  ec.getConcepts().iterator();
+			while(it.hasNext()){
+				Concept c = it.next();
+				if(excluded.contains(c.getCui())){
+					it.remove();
+				}
+			}
+		}
+		return filteredList;
+	}
+
+	private List<String> getSCUI(String id){
+		DBConnector db = new DBConnector(METATHESAURUS, USER, PASS);
+		List<String> idlist = new ArrayList<String>();
+		String sql = "SELECT SCUI FROM metathesaurus.mrconso WHERE CUI='"+id+"' AND ISPREF='Y' AND SAB='SNOMEDCT_US' GROUP BY SCUI";
+		try {
+			ResultSet rs = db.performQuery(sql);
+			if(rs!=null){
+				while(rs.next()){
+					String scui = rs.getString("SCUI");
+					if(!index.containsKey(scui)){
+						// API call to check actual status of the concept
+						index.put(scui, api.getStatusFromDB(scui));
+					}
+					if(index.get(scui)==1) // If it is active, add it to the result list
+						idlist.add(rs.getString("SCUI"));
+				}
+				rs.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		db.endConnector();
+		return idlist;
+	}
+
+	private List<String> getProperSCUI(String cui){
+		CoreDatasetServiceClient normalizer;
+		List<String> idlist = getSCUI(cui);
+		try {
+			normalizer = new CoreDatasetServiceClient();
+			if(idlist.size()>2){
+				List<String> aux = new CopyOnWriteArrayList<>(idlist);
+				idlist.clear();
+				Iterator<String> it = aux.iterator();
+				while(it.hasNext()){
+					String id = it.next();
+					if(normalizer.getRootConcept(id).equals("Unknown"))
+						aux.remove(id);
+				}
+				if(idlist.size()>2){
+					idlist.addAll(normalizer.getBestMatches(aux));
+				}
+				else
+					idlist.addAll(aux);
+			}
+		} catch (ServiceNotAvailable e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return idlist;
 	}
 }

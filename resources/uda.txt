@@ -1,0 +1,19 @@
+
+ULN|upper limit of normal
+HER2|Oncogene protein HER-2/neu
+ECOG|Eastern Cooperative Oncology Group
+ER|Extended-Release
+IHC|Immunohistochemistry
+ALT|Argon laser trabeculoplasty
+SLT|Selective laser trabeculoplasty
+MRI|Magnetic Resonance Imaging
+FISH|fluorescence in situ hybridization
+DCIS|Ductal Carcinoma In Situ
+CNS|Central Nervous System
+CT|Computed Tomography
+PET|Positron Emission Tomography
+ANC|Absolute neutrophil count
+HIV|human immunodeficiency virus
+RECIST|Response Evaluation Criteria In Solid Tumors
+LVEF|Left ventricular ejection fraction
+QT|QT interval
