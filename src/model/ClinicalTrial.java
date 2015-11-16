@@ -25,6 +25,16 @@ public class ClinicalTrial {
 	private String maximumAge;
 	
 	public ClinicalTrial() {
+		nctId = "-";
+		title = "-";
+		briefSummary = "-";
+		startDate = "-";
+		studyType = "-";
+		studyPop = "-";
+		samplingMethod = "-";
+		criteria = "-";
+		minimumAge = "-";
+		maximumAge = "-";
 	}
 	
 	public void persistClinicalTrial(){

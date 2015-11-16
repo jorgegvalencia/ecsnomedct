@@ -110,6 +110,16 @@ public final class TextProcessor {
 		NLPTagger tagger = new NLPTagger("resources/en-pos-maxent.bin");
 		return tagger.posTag(tokenizer.tokenizeArray(np));
 	}
+	
+	/**
+	 * Returns a list with the tokens of the given phrase.
+	 * @param np
+	 * @return
+	 */
+	public static List<String> getTokensAsList(String np){
+		NLPTokenizer tokenizer = new NLPTokenizer("resources/en-token.bin");
+		return tokenizer.tokenize(np);
+	}
 
 	/*public static String getPOSTagsAsString(String np){
 		String tagged = tagger.tagString(np);

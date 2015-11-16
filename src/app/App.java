@@ -55,7 +55,7 @@ public class App {
 		//ConceptExtractor.endServers();
 		//statusDBcodes("C0006826");
 		//statusTest();
-		clusterConcepts(10000);
+		clusterConcepts(4500,550); //limit, offset
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
@@ -177,7 +177,7 @@ public class App {
 	}
 
 	// Método que crea un CSV con los conceptos de un conjunto de ensayos clínicos
-	public static void clusterConcepts(int limit){
+	public static void clusterConcepts(int limit, int offset){
 		// Tools
 		CTManager ctm = new CTManager();
 		ConceptExtractor ce = new ConceptExtractor();
@@ -195,20 +195,22 @@ public class App {
 		
 		// Processing time estimation
 		System.out.print("Processing trials... estimated time: ");
-		if(((files.length < limit) ? files.length : limit)*18/60 > 60)
-			System.out.print(((files.length < limit) ? files.length : limit)*18/3600 + " h\n");
+		if(((files.length - offset < limit) ? files.length - offset : limit)*18/60 > 60)
+			System.out.print(((files.length - offset < limit) ? files.length - offset : limit)*18/3600 + " h\n");
 		else
-			System.out.print(((files.length < limit) ? files.length : limit)*18/60 + " min\n");
+			System.out.print(((files.length - offset < limit) ? files.length - offset : limit)*18/60 + " min\n");
 		
 		// Processing
 		int j=0;
-		for(File f: files){
-			if(j>=limit)
+		//for(File f: files){
+		for(int i=offset;i<files.length && i<limit+offset;i++){
+			File f = files[i];
+			if(j>=limit+offset)
 				break;
 			if(f.getName().contains("NCT")){
 				j++;
 				System.out.print(dateFormat.format(new Date()));
-				System.out.print(" ["+j+"] ");
+				System.out.print(" ["+j+"]"+ "["+f.getName()+"] ");
 				long startTime = System.nanoTime();
 				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
 				ct.persistClinicalTrial();

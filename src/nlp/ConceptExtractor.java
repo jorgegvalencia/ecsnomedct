@@ -1,7 +1,6 @@
 package nlp;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,14 +8,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,7 +37,7 @@ import model.EligibilityCriteria;
 
 public class ConceptExtractor {
 	// JDBC driver name and database URL
-	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+	//private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
 	private static final String METATHESAURUS = "jdbc:mysql://kandel.dia.fi.upm.es/metathesaurus";
 	private static final String NORM = "jdbc:mysql://localhost/norm";
 	//  Database credentials
@@ -49,7 +45,6 @@ public class ConceptExtractor {
 	private static final String PASS = "terminology_service";
 	private static final String MMSERVER14 = "C:\\Users\\Jorge\\public_mm\\bin\\mmserver14.bat"; // -UDA C:\\Users\\Jorge\\UDAfile
 	private static final String SKRMEDPOSTCTL = "C:\\Users\\Jorge\\public_mm\\bin\\skrmedpostctl_start.bat";
-	private static final String SKRMEDPOSTCTL_STOP = "C:\\Users\\Jorge\\public_mm\\bin\\skrmedpostctl_stop.bat";
 	// Index for status of concepts
 	private static HashMap<String,Integer> index = new HashMap<>(); // scui,status
 	private static HashSet<String> excluded = new HashSet<String>(); // CUI
@@ -209,7 +204,7 @@ public class ConceptExtractor {
 		return resultList;
 	}
 
-	private void printAcronymsAbbrevs(Result result) {
+	/*private void printAcronymsAbbrevs(Result result) {
 		List<AcronymsAbbrevs> aaList;
 		try {
 			aaList = result.getAcronymsAbbrevs();
@@ -311,7 +306,7 @@ public class ConceptExtractor {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
+	}*/
 
 
 
@@ -419,6 +414,7 @@ public class ConceptExtractor {
 	}
 
 	private List<Concept> getPatternConcepts(String nounp) {
+		List<String> tokens = TextProcessor.getTokensAsList(nounp);
 		List<Concept> result = new ArrayList<Concept>();
 		Concept c;
 		if(nounp.toLowerCase().contains("eastern cooperative oncology group")){
@@ -439,13 +435,13 @@ public class ConceptExtractor {
 			c.setHierarchy("procedure");
 			result.add(c);
 		}
-		else if(nounp.toLowerCase().contains(" age ") || nounp.toLowerCase().contains(" age.")){
-			c = new Concept("C0001779",
-					"424144002",
-					"Age",
-					"Current chronological age (observable entity)",
-					nounp, new ArrayList<String>(Arrays.asList("orga")));
-			c.setHierarchy("observable entity");
+		else if(nounp.toLowerCase().contains("breast feeding")){
+			c = new Concept("C1623040",
+					"69840006",
+					"Normal breast feeding",
+					"Normal breast feeding (finding)",
+					nounp, new ArrayList<String>(Arrays.asList("fndg")));
+			c.setHierarchy("finding");
 			result.add(c);
 		}
 		else if(nounp.toLowerCase().contains("contraception") 
@@ -459,13 +455,14 @@ public class ConceptExtractor {
 			c.setHierarchy("regime/therapy");
 			result.add(c);
 		}
-		else if(nounp.toLowerCase().contains("breast feeding")){
-			c = new Concept("C1623040",
-					"69840006",
-					"Normal breast feeding",
-					"Normal breast feeding (finding)",
-					nounp, new ArrayList<String>(Arrays.asList("fndg")));
-			c.setHierarchy("finding");
+		//nounp.toLowerCase().contains(" age ") || nounp.toLowerCase().contains(" age.")
+		else if(tokens.contains("age")){
+			c = new Concept("C0001779",
+					"424144002",
+					"Age",
+					"Current chronological age (observable entity)",
+					nounp, new ArrayList<String>(Arrays.asList("orga")));
+			c.setHierarchy("observable entity");
 			result.add(c);
 		}
 		return result;

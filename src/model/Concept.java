@@ -48,7 +48,7 @@ public class Concept {
 				e.printStackTrace();
 			}
 		}
-		sql = "INSERT IGNORE INTO ec_concepts (eligibility_criteria_id,clinical_trial_id,concept_sctid) VALUES(?,?,?)";
+		sql = "INSERT IGNORE INTO ec_concepts (eligibility_criteria_id,clinical_trial_id,concept_sctid,phrase) VALUES(?,?,?,?)";
 		//"ON DUPLICATE KEY UPDATE eligibility_criteria_id=VALUES(eligibility_criteria_id), clinical_trial_id=VALUES(clinical_trial_id), concept_sctid=VALUES(concept_sctid)";
 		ps = db.prepareInsert(sql);
 		if(ps != null){
@@ -56,6 +56,7 @@ public class Concept {
 				ps.setInt(1, auto_id);
 				ps.setString(2, ct);
 				ps.setString(3, sctid);
+				ps.setString(4, phrase);
 				ps.executeUpdate();
 				ps.close();
 			} catch (SQLException e) {
