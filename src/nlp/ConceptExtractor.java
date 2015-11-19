@@ -13,23 +13,17 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import coredataset.CoreDatasetServiceClient;
 import app.SnomedWebAPIClient;
 import db.DBConnector;
 import exceptions.ServiceNotAvailable;
-import gov.nih.nlm.nls.metamap.AcronymsAbbrevs;
-import gov.nih.nlm.nls.metamap.ConceptPair;
 import gov.nih.nlm.nls.metamap.Ev;
 import gov.nih.nlm.nls.metamap.Mapping;
 import gov.nih.nlm.nls.metamap.MetaMapApi;
 import gov.nih.nlm.nls.metamap.MetaMapApiImpl;
-import gov.nih.nlm.nls.metamap.Negation;
 import gov.nih.nlm.nls.metamap.PCM;
-import gov.nih.nlm.nls.metamap.Position;
 import gov.nih.nlm.nls.metamap.Result;
 import gov.nih.nlm.nls.metamap.Utterance;
 import model.Concept;
@@ -39,7 +33,7 @@ public class ConceptExtractor {
 	// JDBC driver name and database URL
 	//private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
 	private static final String METATHESAURUS = "jdbc:mysql://kandel.dia.fi.upm.es/metathesaurus";
-	private static final String NORM = "jdbc:mysql://localhost/norm";
+	//private static final String NORM = "jdbc:mysql://localhost/norm";
 	//  Database credentials
 	private static final String USER = "umls";
 	private static final String PASS = "terminology_service";
@@ -99,7 +93,6 @@ public class ConceptExtractor {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		//if(tagger == null || !tagger.isAlive()){ // || !tagger.isAlive()
 		try {
 			// Start tagger server first
 			tagger = rt.exec(SKRMEDPOSTCTL);
@@ -113,8 +106,6 @@ public class ConceptExtractor {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		//}
-		//if(mmserver == null || !mmserver.isAlive()){
 		try {
 			// Start the metamap server
 			mmserver = rt.exec(MMSERVER14);
@@ -129,27 +120,10 @@ public class ConceptExtractor {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		//}
 		mmapi = new MetaMapApiImpl();
 		mmapi.setOptions(options);
 	}
 
-	/*	public void endServers(){
-		if(tagger != null && tagger.isAlive()){
-			tagger.destroyForcibly();
-			System.out.println("skrmedpostctl service ended.");
-		}
-		if(mmserver != null && mmserver.isAlive()){
-			mmserver.destroyForcibly();
-			System.out.println("mmserver14 service ended.");
-		}
-	}*/
-
-	/*	public boolean serversUp(){
-		boolean tag = tagger.isAlive();
-		boolean mm = mmserver.isAlive();
-			return tagger != null && mmserver !=null && tag && mm;
-	}*/
 	/**
 	 * @param text
 	 * @return Returns a set of EligibilityCriteria objects that contains a list of concepts contained in the elegibility criteria text.
@@ -180,152 +154,17 @@ public class ConceptExtractor {
 		ecList = filterConcepts(ecList);
 		return ecList;
 	}
-	
-	public void persistEC(EligibilityCriteria ec){
-		DBConnector db = new DBConnector(NORM,USER,PASS);
-		//String sql = "INSERT INTO eligibilitycriteria (clinicaltrial_id,type,text) VALUES ("+ec.;
-		db.endConnector();
-	}
 
 	private List<Result> queryFromString(String text) throws IOException{
 		List<Result> resultList = new ArrayList<>();
 		try{
 			resultList = mmapi.processCitationsFromString(text);
 		} catch (Exception e){
-			//try {
 			System.err.println("Restarting servers...");
-			//Thread.sleep(5000);
 			initServers();
-			//Thread.sleep(5000);
-			//} catch (InterruptedException e1) {
-			//e1.printStackTrace();
-			//}
 		}
 		return resultList;
 	}
-
-	/*private void printAcronymsAbbrevs(Result result) {
-		List<AcronymsAbbrevs> aaList;
-		try {
-			aaList = result.getAcronymsAbbrevs();
-			if (aaList.size() > 0) {
-				System.out.println("Acronyms and Abbreviations:");
-				for (AcronymsAbbrevs e: aaList) {
-					System.out.println("Acronym: " + e.getAcronym());
-					System.out.println("Expansion: " + e.getExpansion());
-					System.out.println("Count list: " + e.getCountList());
-					System.out.println("CUI list: " + e.getCUIList());
-				}
-			} else {
-				System.out.println(" None.");
-			}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-	}
-
-	private void printNegations(Result result) {
-		List<Negation> negList;
-		try {
-			negList = result.getNegations();
-			if (negList.size() > 0) {
-				System.out.println("Negations:");
-				for (Negation e: negList) {
-					System.out.println("type: " + e.getType());
-					System.out.print("Trigger: " + e.getTrigger() + ": [");
-					for (Position pos: e.getTriggerPositionList()) {
-						System.out.print(pos  + ",");
-					}
-					System.out.println("]");
-					System.out.print("ConceptPairs: [");
-					for (ConceptPair pair: e.getConceptPairList()) {
-						System.out.print(pair + ",");
-					}
-					System.out.println("]");
-					System.out.print("ConceptPositionList: [");
-					for (Position pos: e.getConceptPositionList()) {
-						System.out.print(pos + ",");
-					}
-					System.out.println("]");
-				}
-			} else {
-				System.out.println(" None.");
-			}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-	}
-
-	private void printUtterances(Result result) {
-		try {
-			for (Utterance utterance: result.getUtteranceList()) {
-				System.out.println("Utterance:");
-				System.out.println(" Id: " + utterance.getId());
-				System.out.println(" Utterance text: " + utterance.getString());
-				System.out.println(" Position: " + utterance.getPosition());
-				for (PCM pcm: utterance.getPCMList()) {
-					System.out.println("Phrase:");
-					System.out.println(" text: " + pcm.getPhrase().getPhraseText());
-					System.out.println(" Minimal Commitment Parse: " + pcm.getPhrase().getMincoManAsString());
-					System.out.println("Candidates:");
-					for (Ev ev: pcm.getCandidateList()) {
-						System.out.println(" Candidate:");
-						System.out.println("  Score: " + ev.getScore());
-						System.out.println("  Concept Id: " + ev.getConceptId());
-						System.out.println("  Concept Name: " + ev.getConceptName());
-						System.out.println("  Preferred Name: " + ev.getPreferredName());
-						System.out.println("  Matched Words: " + ev.getMatchedWords());
-						System.out.println("  Semantic Types: " + ev.getSemanticTypes());
-						System.out.println("  MatchMap: " + ev.getMatchMap());
-						System.out.println("  MatchMap alt. repr.: " + ev.getMatchMapList());
-						System.out.println("  is Head?: " + ev.isHead());
-						System.out.println("  is Overmatch?: " + ev.isOvermatch());
-						System.out.println("  Sources: " + ev.getSources());
-						System.out.println("  Positional Info: " + ev.getPositionalInfo());
-					}
-					System.out.println("Mappings:");
-					for (Mapping map: pcm.getMappingList()) {
-						System.out.println(" Map Score: " + map.getScore());
-						for (Ev mapEv: map.getEvList()) {
-							System.out.println("   Score: " + mapEv.getScore());
-							System.out.println("   Concept Id: " + mapEv.getConceptId());
-							System.out.println("   Concept Name: " + mapEv.getConceptName());
-							System.out.println("   Preferred Name: " + mapEv.getPreferredName());
-							System.out.println("   Matched Words: " + mapEv.getMatchedWords());
-							System.out.println("   Semantic Types: " + mapEv.getSemanticTypes());
-							System.out.println("   MatchMap: " + mapEv.getMatchMap());
-							System.out.println("   MatchMap alt. repr.: " + mapEv.getMatchMapList());
-							System.out.println("   is Head?: " + mapEv.isHead());
-							System.out.println("   is Overmatch?: " + mapEv.isOvermatch());
-							System.out.println("   Sources: " + mapEv.getSources());
-							System.out.println("   Positional Info: " + mapEv.getPositionalInfo());
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}*/
-
-
-
-	/*	public void endServers(){
-			if(tagger != null && tagger.isAlive()){
-				tagger.destroyForcibly();
-				System.out.println("skrmedpostctl service ended.");
-			}
-			if(mmserver != null && mmserver.isAlive()){
-				mmserver.destroyForcibly();
-				System.out.println("mmserver14 service ended.");
-			}
-		}*/
-
-	/*	public boolean serversUp(){
-			boolean tag = tagger.isAlive();
-			boolean mm = mmserver.isAlive();
-				return tagger != null && mmserver !=null && tag && mm;
-		}*/
 
 	public List<String> getUtterancesFromText(String text){
 		// do needed process
@@ -365,6 +204,10 @@ public class ConceptExtractor {
 				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
 				List<Result> result = queryFromString(TextProcessor.removeStopWords(nounp).toLowerCase());
 				for(Result res: result){
+					// !!! PROCESS NEGATIONS
+					/*
+					 * List<Negation> negList = res.getNegations();
+					 */
 					for(Utterance uttr: res.getUtteranceList()){
 						for (PCM pcm: uttr.getPCMList()){
 							if(!pcm.getMappingList().isEmpty()){
@@ -527,7 +370,7 @@ public class ConceptExtractor {
 		return idlist;
 	}
 
-	private List<String> getProperSCUI(String cui){
+	/*private List<String> getProperSCUI(String cui){
 		CoreDatasetServiceClient normalizer;
 		List<String> idlist = getSCUI(cui);
 		try {
@@ -552,5 +395,5 @@ public class ConceptExtractor {
 			System.exit(1);
 		}
 		return idlist;
-	}
+	}*/
 }

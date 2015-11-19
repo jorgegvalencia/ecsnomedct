@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,32 +29,17 @@ import model.EligibilityCriteria;
 
 public class App {
 	// test trials
-	private static final String[] TRIALS = {"NCT02102490","NCT01358877","NCT00148876","NCT01633060","NCT01700257"};
+	//private static final String[] TRIALS = {"NCT02102490","NCT01358877","NCT00148876","NCT01633060","NCT01700257"};
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
-		//normalizationTest();
-		//abbrevAnalisys(500);
-		/*try {
-			//PrintStream stdout = System.out;
-			System.setOut(new PrintStream(new FileOutputStream("C:\\Users\\Jorge\\Documents\\GitHub\\ecsnomedct\\output.txt")));
-			//System.setOut(stdout);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
 		/*
 		for(String trial: TRIALS){
 			metamapTest(trial);
 			System.out.println("\n");
 		}
 		*/
-		//persistTEST();
-		//clusterClinicalTrials();
-		//ConceptExtractor.endServers();
-		//statusDBcodes("C0006826");
-		//statusTest();
-		clusterConcepts(4500,550); //limit, offset
+		clusterConcepts(5000,3240); //limit, offset
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));
 	}
@@ -80,36 +64,26 @@ public class App {
 
 	// Test del procesamiento de un ensayo clínico con la API metamap + normalización 
 	public static void metamapTest(String nctid){
-	//	try {
-			//String nctid = TRIALS[0];
-			CTManager ctm = new CTManager();
-			ConceptExtractor ce = new ConceptExtractor();
-			//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
-			ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
-			ct.persistClinicalTrial();
-			ct.print();
-			String criteria = ct.getCriteria();
-			List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
-			//int index=1;
-			for(EligibilityCriteria ec: ecList){
-				//ec.persistEligibilityCriteria(ct.getNctId(), index);
-				if(!ec.getConcepts().isEmpty()){
-					ec.print();
-					/*for(Concept c: ec.getConcepts()){
+		CTManager ctm = new CTManager();
+		ConceptExtractor ce = new ConceptExtractor();
+		ClinicalTrial ct = ctm.buildClinicalTrial(nctid);
+		//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
+		ct.persistClinicalTrial();
+		ct.print();
+		String criteria = ct.getCriteria();
+		List<EligibilityCriteria> ecList = ce.getEligibilityCriteriaFromText(criteria);
+		for(EligibilityCriteria ec: ecList){
+			if(!ec.getConcepts().isEmpty()){
+				ec.print();
+				/*for(Concept c: ec.getConcepts()){
 						c.setNormalForm(normalizer.getNormalFormAsString(c.getSctid(),true));
 						c.print2();
 					}*/
-				}
-				//index++;
 			}
-/*		} catch (ServiceNotAvailable e) {
-			System.exit(1);*/
-/*		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		}
 	}
 	
+	// Test de persistencia de los resultados del procesamiento
 	public static void persistTEST(){
 		CTManager ctm = new CTManager();
 		ClinicalTrial ct = ctm.buildClinicalTrial("NCT02102490");
@@ -120,13 +94,10 @@ public class App {
 		int i=1;
 		for(EligibilityCriteria ec: ecList){
 			ec.persistEligibilityCriteria(ct.getNctId(), i);
-			/*for(Concept c: ec.getConcepts()){
-				c.persistConcept(ct.getNctId(), i);
-				i++;	
-			}*/
 			i++;
 		}
 	}
+	
 	
 	public static void clusterClinicalTrials(){
 		PrintStream stdout = System.out;
@@ -293,6 +264,7 @@ public class App {
 		}
 	}
 
+	// Metodo que imprime por pantalla las abreviaciones más frecuentes
 	public static void abbrevAnalisys(int max){
 		NLPTokenizer tokenizer = new NLPTokenizer();
 		CTManager ct = new CTManager();
@@ -341,61 +313,4 @@ public class App {
 		}
 	}
 
-	/*public static List<String> activeDBcodes(String id){
-		ConceptExtractor ce = new ConceptExtractor();
-		ce.initDBConnector();
-		List<String> idlist = ce.getSCUI(id);
-		ce.endDBConnector();
-		return idlist;
-	}
-*/
-	/*public static void clusterDependencies(){
-		CTManager ctm = new CTManager();
-		Map<String,Integer> patternmap = new HashMap<String,Integer>();
-		int nPatterns = 0;
-		String path="resources/trials/";
-		File[] files = new File(path).listFiles();
-		List<File> flist = Arrays.asList(files);
-		int j=1;
-		for(File f: flist){
-			if(f.getName().contains("NCT")){
-				long startTime = System.nanoTime();
-				ClinicalTrial ct = ctm.buildClinicalTrial(f.getName().replace(".xml", ""));
-				ConceptExtractor ce = new ConceptExtractor();
-				String criteria = ct.getCriteria();
-				List<String> utterances = ce.getUtterancesFromText(criteria);
-				for(String utt: utterances){
-					for(String dependency: TextProcessor.getDependencies(utt)){
-						if(patternmap.containsKey(dependency))
-							patternmap.put(dependency, patternmap.get(dependency)+1);
-						else
-							patternmap.put(dependency, 1);
-						nPatterns++;
-					}
-				}
-				long endTime = System.nanoTime();
-				System.out.print("["+j+"] ");
-				System.out.format("%.2f s\n",(endTime - startTime)/Math.pow(10, 9));
-				j++;
-			}
-		}
-		System.out.println("Sorting map...");
-		ArrayList<Map.Entry<String, Integer>> entries2 = new ArrayList<>(patternmap.entrySet());
-		Collections.sort(entries2, new Comparator<Map.Entry<String, Integer>>() {
-			@Override
-			public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
-				return a.getValue().compareTo(b.getValue());
-			}
-		});
-		System.out.println("Total trials: "+j);
-		System.out.println("Top 50:");
-		System.out.format("%30s | %15s | %5s \n","Dependency","Appearances","Frecuency");
-		for(int i = 0; i < 50 && i < entries2.size(); i++){
-			double frecuency = ((double)entries2.get(entries2.size() - i - 1).getValue()/(double)nPatterns);
-			System.out.format("%-30s | %-15s | %-5.4f %%\n",
-					entries2.get(entries2.size() - i - 1).getKey(),
-					+entries2.get(entries2.size() - i - 1).getValue(),
-					frecuency*100);
-		}
-	}*/
 }
