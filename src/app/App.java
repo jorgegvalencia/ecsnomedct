@@ -29,16 +29,16 @@ import model.EligibilityCriteria;
 
 public class App {
 	// test trials
-	//private static final String[] TRIALS = {"NCT02102490","NCT01358877","NCT00148876","NCT01633060","NCT01700257"};
+	private static final String[] TRIALS = {"NCT02102490","NCT01358877","NCT00148876","NCT01633060","NCT01700257"};
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
-		/*
-		for(String trial: TRIALS){
+		
+		/*for(String trial: TRIALS){
 			metamapTest(trial);
 			System.out.println("\n");
-		}
-		*/
+		}*/
+		
 		clusterConcepts(5000,3240); //limit, offset
 		long endTime = System.nanoTime();
 		System.out.format("Total: %.2f s",(endTime - startTime)/Math.pow(10, 9));

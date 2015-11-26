@@ -61,7 +61,7 @@ public class ConceptExtractor {
 	 * tmco - Temporal Concept
 	 */
 	private static MetaMapApi mmapi;
-	private static String options = "-Q 2 -i -k cell,fish,ftcn,idcn,inpr,menp,mnob,podg,qlco,qnco,spco,tmco -R SNOMEDCT_US";
+	private static String options = "-y -Q 2 -i -k cell,fish,ftcn,idcn,inpr,menp,mnob,podg,qlco,qnco,spco,tmco -R SNOMEDCT_US";
 	private SnomedWebAPIClient api;
 
 	public ConceptExtractor() {
@@ -85,7 +85,7 @@ public class ConceptExtractor {
 	}
 
 	public void initServers(){
-		if(rt == null){
+		/*if(rt == null){
 			rt = Runtime.getRuntime();
 		}
 		try {
@@ -119,8 +119,9 @@ public class ConceptExtractor {
 			Thread.sleep(3000);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
-		}
+		}*/
 		mmapi = new MetaMapApiImpl();
+		mmapi.setHost("luria.dia.fi.upm.es");
 		mmapi.setOptions(options);
 	}
 
@@ -210,35 +211,36 @@ public class ConceptExtractor {
 					 */
 					for(Utterance uttr: res.getUtteranceList()){
 						for (PCM pcm: uttr.getPCMList()){
-							if(!pcm.getMappingList().isEmpty()){
+							//if(!pcm.getMappingList().isEmpty()){
 								// only best mapping
-								Mapping map = pcm.getMappingList().get(0);
-								for (Ev mapEv: map.getEvList()){
-									// !!! FILTER: if concept fulfill some rules, ignore it
-									String sctid = "-";
-									String fsn;
-									List<String> scuil = getSCUI(mapEv.getConceptId()); // getProperSCUI
-									if(!scuil.isEmpty()){
-										sctid=scuil.get(0);
-										//fsn = normalizer.getFSN(sctid);
+								//Mapping map = pcm.getMappingList().get(0);
+								for(Mapping map: pcm.getMappingList()){
+									for (Ev mapEv: map.getEvList()){
+										// !!! FILTER: if concept fulfill some rules, ignore it
+										String sctid = "-";
+										String fsn;
+										List<String> scuil = getSCUI(mapEv.getConceptId()); // getProperSCUI
+										if(!scuil.isEmpty()){
+											sctid=scuil.get(0);
+											//fsn = normalizer.getFSN(sctid);
+										}
+										if((fsn = api.getFSN(sctid)) == null)
+											continue;
+										//fsn = mapEv.getPreferredName();
+										Concept concept = new Concept(mapEv.getConceptId(),
+												sctid,
+												mapEv.getConceptName(),
+												fsn,
+												nounp,
+												mapEv.getSemanticTypes());
+										Matcher m = p.matcher(fsn);
+										String hierarchy;
+										if(m.find()){
+											hierarchy = m.group(0).replaceAll("\\p{Punct}", "");
+											concept.setHierarchy(hierarchy);
+										}	
+										concepts.add(concept);
 									}
-									if((fsn = api.getFSN(sctid)) == null)
-										continue;
-									//fsn = mapEv.getPreferredName();
-									Concept concept = new Concept(mapEv.getConceptId(),
-											sctid,
-											mapEv.getConceptName(),
-											fsn,
-											nounp,
-											mapEv.getSemanticTypes());
-									Matcher m = p.matcher(fsn);
-									String hierarchy;
-									if(m.find()){
-										hierarchy = m.group(0).replaceAll("\\p{Punct}", "");
-										concept.setHierarchy(hierarchy);
-									}	
-									concepts.add(concept);
-								}
 							}	
 						}
 					}
