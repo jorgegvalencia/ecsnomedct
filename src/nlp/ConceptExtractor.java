@@ -198,12 +198,14 @@ public class ConceptExtractor {
 		Pattern p = Pattern.compile("\\([a-z\\s/]+\\)\\z");
 		try{
 			//CoreDatasetServiceClient normalizer = new CoreDatasetServiceClient();
+			// !!! REVIEW THIS *************************************************************************************
 			List<String> np = getNounPhrasesFromText(text);
 			for(String nounp: np){
 				// !!! FILTER: search for patterns to manually map frequent concepts
 				concepts.addAll(getPatternConcepts(nounp));
 				// !!! PROCESS NOUN PHRASE BEFORE CALLING METAMAP
 				List<Result> result = queryFromString(TextProcessor.removeStopWords(nounp).toLowerCase());
+			// !!! REVIEW THIS *************************************************************************************
 				for(Result res: result){
 					// !!! PROCESS NEGATIONS
 					/*

@@ -8,8 +8,8 @@ import db.DBConnector;
 
 public class EligibilityCriteria {
 	private static final String NORM = "jdbc:mysql://localhost/norm";
-	private static final String USER = "root";
-	private static final String PASS = "root";
+	private static final String USER = "dbuser";
+	private static final String PASS = "1234";
 	
 	private String utterance;
 	private List<Concept> concepts;

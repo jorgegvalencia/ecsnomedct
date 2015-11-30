@@ -3,6 +3,8 @@ package nlp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.HasWord;
@@ -36,12 +38,14 @@ public final class TextProcessor {
 			"are","that",",",";","<","who","of","since","and/or","as","would","if","for",").",
 			"will","may","e.g.","has","with","OR","been","but","had","either","unless","should",
 			"Must","in","of the","any","than","by","which","If","Have","they","to","can","Has"));
+	private static final Pattern ASCII_PATTERN = Pattern.compile("[^\\p{ASCII}]+");
 
 
 	public static String ProcessEligibilityCriteria(String text){
 		String refinedText;
+		refinedText = ASCII_PATTERN.matcher(text).replaceAll(" ");
 		// Elimina los puntos de contenido numericos
-		refinedText = text.replaceAll("([0-9]+\\.(?=\\s))+\\s", " - ");
+		refinedText = refinedText.replaceAll("([0-9]+\\.(?=\\s))+\\s", " - ");
 		// Elimina los guiones de puntos de contenido
 		refinedText = refinedText.replaceAll("-\\s+(?=[A-Z])", "");
 		// A las oraciones sin punto final y con salto de linea se le anade un punto final

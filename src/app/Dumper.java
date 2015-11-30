@@ -149,8 +149,11 @@ public class Dumper {
 							row = sheet2.createRow(rownum2);
 							
 							String phrase = rs2.getString("PHRASE");
-							
+							String utt = rs2.getString("UTT");
+
 							cell = row.createCell(0); cell.setCellValue(phrase);
+							cell = row.createCell(1); cell.setCellValue(utt);
+							
 							rownum2++;
 						}
 						sheet2.setColumnWidth(0,56000);
@@ -186,7 +189,8 @@ public class Dumper {
 	
 	private static ResultSet getPhrasesForConcept(String sctid, DBConnector db){
 		String ecs_concept = "SELECT DISTINCT " //-- , concept.name AS TERM, concept.sctid AS SCTID -- , utterance AS UTT -- ,concept.sctid AS SCTID, name AS TERM 
-				+ "phrase AS PHRASE "
+				+ "phrase AS PHRASE, "
+				+ "utterance AS UTT "
 				+ "FROM ec_concepts, eligibility_criteria, concept "
 				+ "WHERE "
 				+ "ec_concepts.eligibility_criteria_id = eligibility_criteria.id AND "
